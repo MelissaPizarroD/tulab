@@ -1,0 +1,7 @@
+packages:
+  - 'server'
+  - 'terminal'
+  - 'gestor'
+  - 'panel'
+allowBuilds:
+  esbuild: true
