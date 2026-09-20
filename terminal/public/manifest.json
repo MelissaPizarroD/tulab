@@ -1,0 +1,17 @@
+{
+  "name": "TuLab Terminal",
+  "short_name": "TuLab",
+  "description": "Terminal de registro de acceso al laboratorio",
+  "theme_color": "#2563eb",
+  "background_color": "#f8fafc",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
