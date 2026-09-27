@@ -4,6 +4,9 @@ node_modules/
 # Builds
 dist/
 build/
+terminal/dist/
+gestor/dist/
+gestor/release/
 
 # Variables de entorno
 .env
@@ -19,3 +22,6 @@ Thumbs.db
 
 # VS Code
 .vscode/
+
+# PWA
+terminal/public/sw.js.map
