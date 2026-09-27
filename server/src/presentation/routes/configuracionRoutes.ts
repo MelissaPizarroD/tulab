@@ -4,6 +4,7 @@ import { verificarToken } from '../middlewares/authMiddleware';
 
 const router = Router();
 
+router.get('/publica', configuracionController.obtenerTodas);
 router.get('/', verificarToken, configuracionController.obtenerTodas);
 router.patch('/:clave', verificarToken, configuracionController.actualizar);
 
