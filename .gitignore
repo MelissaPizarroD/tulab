@@ -25,3 +25,6 @@ Thumbs.db
 
 # PWA
 terminal/public/sw.js.map
+
+# Panel
+panel/dist/
