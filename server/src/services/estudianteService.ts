@@ -20,6 +20,9 @@ export const estudianteService = {
   async registrarVisitante(data: {
     nombre: string;
     motivo_visita?: string;
+    email?: string;
+    telefono?: string;
+    institucion?: string;
   }) {
     const codigo_temporal = generarCodigoTemporal();
     const timestamp_expiracion = new Date();

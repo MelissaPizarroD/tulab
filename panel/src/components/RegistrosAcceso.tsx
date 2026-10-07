@@ -1,19 +1,32 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { socket } from '../services/api';
+import { DetallePersonaModal } from './DetallePersonaModal';
 
 interface Registro {
   id_registro: number;
-  codigo_estudiantil: string;
-  nombre_estudiante: string;
+  codigo_estudiantil: string | null;
+  nombre_estudiante: string | null;
+  nombre_visitante: string | null;
+  codigo_temporal: string | null;
   hora_entrada: string;
   hora_salida: string | null;
   estado: string;
   origen_registro: string;
+  programa_academico: string | null;
+  semestre: number | null;
+  correo_institucional: string | null;
+  telefono_contacto: string | null;
+  motivo_visita: string | null;
+  email: string | null;
+  telefono: string | null;
+  institucion: string | null;
+  timestamp_expiracion: string | null;
 }
 
 export const RegistrosAcceso = ({ id_turno }: { id_turno: number }) => {
   const [registros, setRegistros] = useState<Registro[]>([]);
+  const [seleccionado, setSeleccionado] = useState<Registro | null>(null);
 
   const cargarRegistros = async () => {
     try {
@@ -41,6 +54,30 @@ export const RegistrosAcceso = ({ id_turno }: { id_turno: number }) => {
     });
   };
 
+  const getPersonaModal = (r: Registro) => {
+    if (r.codigo_estudiantil) {
+      return {
+        tipo: 'estudiante' as const,
+        codigo_estudiantil: r.codigo_estudiantil,
+        nombre: r.nombre_estudiante || '',
+        programa_academico: r.programa_academico || '',
+        semestre: r.semestre || 0,
+        correo_institucional: r.correo_institucional || '',
+        telefono_contacto: r.telefono_contacto
+      };
+    }
+    return {
+      tipo: 'visitante' as const,
+      nombre: r.nombre_visitante || 'Visitante',
+      codigo_temporal: r.codigo_temporal || '',
+      email: r.email,
+      telefono: r.telefono,
+      institucion: r.institucion,
+      motivo_visita: r.motivo_visita,
+      timestamp_expiracion: r.timestamp_expiracion || ''
+    };
+  };
+
   return (
     <div>
       <h3 style={{ marginTop: 0, color: '#1e293b' }}>
@@ -59,9 +96,25 @@ export const RegistrosAcceso = ({ id_turno }: { id_turno: number }) => {
           <tbody>
             {registros.map(r => (
               <tr key={r.id_registro} style={{ borderTop: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '10px 12px', color: '#1e293b' }}>{r.codigo_estudiantil}</td>
-                <td style={{ padding: '10px 12px', color: '#1e293b' }}>{r.nombre_estudiante || 'Visitante'}</td>
-                <td style={{ padding: '10px 12px', color: '#64748b' }}>{formatHora(r.hora_entrada)}</td>
+                <td style={{ padding: '10px 12px', color: '#1e293b' }}>
+                  {r.codigo_estudiantil || r.codigo_temporal || '-'}
+                </td>
+                <td style={{ padding: '10px 12px' }}>
+                  <button
+                    onClick={() => setSeleccionado(r)}
+                    style={{
+                      background: 'none', border: 'none',
+                      color: '#2563eb', cursor: 'pointer',
+                      fontSize: '14px', padding: 0,
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    {r.nombre_estudiante || r.nombre_visitante || 'Visitante'}
+                  </button>
+                </td>
+                <td style={{ padding: '10px 12px', color: '#64748b' }}>
+                  {formatHora(r.hora_entrada)}
+                </td>
                 <td style={{ padding: '10px 12px' }}>
                   <span style={{
                     padding: '2px 8px', borderRadius: '12px', fontSize: '12px',
@@ -83,6 +136,13 @@ export const RegistrosAcceso = ({ id_turno }: { id_turno: number }) => {
           </tbody>
         </table>
       </div>
+
+      {seleccionado && (
+        <DetallePersonaModal
+          persona={getPersonaModal(seleccionado)}
+          onCerrar={() => setSeleccionado(null)}
+        />
+      )}
     </div>
   );
 };

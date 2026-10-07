@@ -32,6 +32,18 @@ export const turnoController = {
     } catch (error: any) {
       res.status(400).json({ mensaje: error.message });
     }
+  },
+
+  async obtenerHistorico(req: Request, res: Response) {
+    try {
+      const { fecha } = req.query;
+      const turnos = await turnoService.obtenerHistorico({
+        fecha: fecha as string
+      });
+      res.json(turnos);
+    } catch (error: any) {
+      res.status(500).json({ mensaje: error.message });
+    }
   }
 
 };

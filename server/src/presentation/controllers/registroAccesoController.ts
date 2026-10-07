@@ -29,6 +29,19 @@ export const registroAccesoController = {
     } catch (error: any) {
       res.status(500).json({ mensaje: error.message });
     }
+  },
+
+  async obtenerHistorico(req: Request, res: Response) {
+    try {
+      const { fecha, codigo } = req.query;
+      const registros = await registroAccesoService.obtenerHistorico({
+        fecha: fecha as string,
+        codigo: codigo as string
+      });
+      res.json(registros);
+    } catch (error: any) {
+      res.status(500).json({ mensaje: error.message });
+    }
   }
 
 };

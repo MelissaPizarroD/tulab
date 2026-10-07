@@ -46,14 +46,16 @@ export const registroAccesoRepository = {
 
   async obtenerActivosPorTurno(id_turno: number) {
     const result = await pool.query(
-      `SELECT ra.*, 
+      `SELECT ra.*,
               e.nombre AS nombre_estudiante, e.programa_academico,
-              v.nombre AS nombre_visitante, v.motivo_visita
-       FROM registro_acceso ra
-       LEFT JOIN estudiante e ON ra.codigo_estudiantil = e.codigo_estudiantil
-       LEFT JOIN visitante v ON ra.id_visitante = v.id_visitante
-       WHERE ra.id_turno = $1 AND ra.estado = 'activo'
-       ORDER BY ra.hora_entrada`,
+              e.semestre, e.correo_institucional, e.telefono_contacto,
+              v.nombre AS nombre_visitante, v.motivo_visita, v.codigo_temporal,
+              v.email, v.telefono, v.institucion, v.timestamp_expiracion
+      FROM registro_acceso ra
+      LEFT JOIN estudiante e ON ra.codigo_estudiantil = e.codigo_estudiantil
+      LEFT JOIN visitante v ON ra.id_visitante = v.id_visitante
+      WHERE ra.id_turno = $1 AND ra.estado = 'activo'
+      ORDER BY ra.hora_entrada`,
       [id_turno]
     );
     return result.rows;
@@ -65,6 +67,37 @@ export const registroAccesoRepository = {
        WHERE id_turno = $1 AND estado = 'activo'`,
       [id_turno]
     );
+  },
+
+  async obtenerHistorico(filtros: { fecha?: string; codigo?: string }) {
+    let query = `
+      SELECT ra.*,
+            e.nombre AS nombre_estudiante, e.programa_academico,
+            e.semestre, e.correo_institucional, e.telefono_contacto,
+            v.nombre AS nombre_visitante, v.motivo_visita, v.codigo_temporal,
+            v.email, v.telefono, v.institucion, v.timestamp_expiracion
+      FROM registro_acceso ra
+      LEFT JOIN estudiante e ON ra.codigo_estudiantil = e.codigo_estudiantil
+      LEFT JOIN visitante v ON ra.id_visitante = v.id_visitante
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+    let i = 1;
+
+    if (filtros.fecha) {
+      query += ` AND DATE(ra.hora_entrada) = $${i++}`;
+      params.push(filtros.fecha);
+    }
+
+    if (filtros.codigo) {
+      query += ` AND ra.codigo_estudiantil = $${i++}`;
+      params.push(filtros.codigo);
+    }
+
+    query += ' ORDER BY ra.hora_entrada DESC LIMIT 100';
+
+    const result = await pool.query(query, params);
+    return result.rows;
   }
 
 };

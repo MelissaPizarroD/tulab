@@ -80,6 +80,10 @@ export const registroAccesoService = {
 
   async obtenerActivosPorTurno(id_turno: number) {
     return await registroAccesoRepository.obtenerActivosPorTurno(id_turno);
+  },
+
+  async obtenerHistorico(filtros: { fecha?: string; codigo?: string }) {
+  return await registroAccesoRepository.obtenerHistorico(filtros);
   }
 
 };

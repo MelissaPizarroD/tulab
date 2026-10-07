@@ -16,6 +16,7 @@ import bitacoraRoutes from './presentation/routes/bitacoraRoutes';
 import programacionRecursoRoutes from './presentation/routes/programacionRecursoRoutes';
 import configuracionRoutes from './presentation/routes/configuracionRoutes';
 import sincronizacionRoutes from './presentation/routes/sincronizacionRoutes';
+import equipoRoutes from './presentation/routes/equipoRoutes';
 
 
 dotenv.config();
@@ -57,6 +58,7 @@ app.use('/api/bitacora', bitacoraRoutes);
 app.use('/api/programaciones', programacionRecursoRoutes);
 app.use('/api/configuracion', configuracionRoutes);
 app.use('/api/sincronizacion', sincronizacionRoutes);
+app.use('/api/equipos', equipoRoutes);
 
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {

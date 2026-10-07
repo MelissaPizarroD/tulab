@@ -5,13 +5,16 @@ export const visitanteRepository = {
   async crear(data: {
     nombre: string;
     motivo_visita?: string;
+    email?: string;
+    telefono?: string;
+    institucion?: string;
     codigo_temporal: string;
     timestamp_expiracion: Date;
   }) {
     const result = await pool.query(
-      `INSERT INTO visitante (nombre, motivo_visita, codigo_temporal, timestamp_generacion, timestamp_expiracion, estado)
-       VALUES ($1, $2, $3, NOW(), $4, 'activo') RETURNING *`,
-      [data.nombre, data.motivo_visita || null, data.codigo_temporal, data.timestamp_expiracion]
+      `INSERT INTO visitante (nombre, motivo_visita, email, telefono, institucion, codigo_temporal, timestamp_generacion, timestamp_expiracion, estado)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, 'activo') RETURNING *`,
+      [data.nombre, data.motivo_visita || null, data.email || null, data.telefono || null, data.institucion || null, data.codigo_temporal, data.timestamp_expiracion]
     );
     return result.rows[0];
   },

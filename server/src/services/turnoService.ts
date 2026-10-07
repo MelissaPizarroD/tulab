@@ -44,6 +44,10 @@ export const turnoService = {
       hora_cierre: ahora.toTimeString().split(' ')[0],
       observaciones_cierre: data.observaciones_cierre
     });
+  },
+
+  async obtenerHistorico(filtros: { fecha?: string }) {
+  return await turnoRepository.obtenerHistorico(filtros);
   }
 
 };
