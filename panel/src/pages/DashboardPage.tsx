@@ -7,6 +7,7 @@ import { api } from '../services/api';
 
 interface Turno {
   id_turno: number;
+  fecha_apertura: string;
   hora_apertura: string;
   estado: string;
 }

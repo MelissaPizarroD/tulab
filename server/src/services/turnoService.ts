@@ -18,10 +18,16 @@ export const turnoService = {
     }
 
     const ahora = new Date();
+    const fecha_apertura = ahora.toLocaleDateString('en-CA');
+    const hora_apertura = ahora.toLocaleTimeString('es-CO', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false
+    });
+
     return await turnoRepository.crear({
       id_encargado_apertura: data.id_encargado_apertura,
-      fecha_apertura: ahora.toISOString().split('T')[0],
-      hora_apertura: ahora.toTimeString().split(' ')[0],
+      fecha_apertura,
+      hora_apertura,
       observaciones_apertura: data.observaciones_apertura
     });
   },
@@ -39,15 +45,20 @@ export const turnoService = {
     await registroAccesoRepository.cerrarTodosPorTurno(id_turno);
 
     const ahora = new Date();
+    const hora_cierre = ahora.toLocaleTimeString('es-CO', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false
+    });
+
     return await turnoRepository.cerrar(id_turno, {
       id_encargado_cierre: data.id_encargado_cierre,
-      hora_cierre: ahora.toTimeString().split(' ')[0],
+      hora_cierre,
       observaciones_cierre: data.observaciones_cierre
     });
   },
 
   async obtenerHistorico(filtros: { fecha?: string }) {
-  return await turnoRepository.obtenerHistorico(filtros);
+    return await turnoRepository.obtenerHistorico(filtros);
   }
 
 };

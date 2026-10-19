@@ -8,7 +8,9 @@ import { useAuth } from '../context/AuthContext';
 
 interface Turno {
   id_turno: number;
+  fecha_apertura: string;
   hora_apertura: string;
+  hora_cierre: string | null;
   estado: string;
 }
 
@@ -87,9 +89,9 @@ export const TurnoPage = () => {
                   Turno activo
                 </span>
                 <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
-                  Apertura: {new Date(`1970-01-01T${turno.hora_apertura}`).toLocaleTimeString('es-CO', {
-                    hour: '2-digit', minute: '2-digit'
-                  })}
+                  Apertura: {new Date(turno.fecha_apertura).toLocaleDateString('es-CO', {
+                  day: '2-digit', month: '2-digit', year: 'numeric'
+                  })} · {turno.hora_apertura?.slice(0, 5)}
                 </p>
               </div>
               <button

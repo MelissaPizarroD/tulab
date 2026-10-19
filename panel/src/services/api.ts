@@ -19,3 +19,15 @@ export const setAuthToken = (token: string) => {
 export const removeAuthToken = () => {
   delete api.defaults.headers.common['Authorization'];
 };
+
+export const setupInterceptors = (onUnauthorized: () => void) => {
+  api.interceptors.response.use(
+    response => response,
+    error => {
+      if (error.response?.status === 401) {
+        onUnauthorized();
+      }
+      return Promise.reject(error);
+    }
+  );
+};

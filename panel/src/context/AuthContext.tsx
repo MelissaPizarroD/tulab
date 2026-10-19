@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { api, setAuthToken, removeAuthToken, socket } from '../services/api';
+import { api, setAuthToken, removeAuthToken, socket, setupInterceptors } from '../services/api';
 
 interface Encargado {
   id_encargado: number;
@@ -22,7 +22,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
 
+  const logout = () => {
+    setToken(null);
+    setEncargado(null);
+    removeAuthToken();
+    localStorage.removeItem('tulab_token');
+    localStorage.removeItem('tulab_encargado');
+    socket.disconnect();
+    window.location.href = '/login';
+  };
+
   useEffect(() => {
+    setupInterceptors(logout);
+
     const tokenGuardado = localStorage.getItem('tulab_token');
     const encargadoGuardado = localStorage.getItem('tulab_encargado');
     if (tokenGuardado && encargadoGuardado) {
@@ -32,6 +44,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       socket.connect();
     }
     setCargando(false);
+
+    const verificarToken = setInterval(async () => {
+      const tokenActual = localStorage.getItem('tulab_token');
+      if (!tokenActual) return;
+      try {
+        await api.get('/api/turnos/activo');
+      } catch {
+        // el interceptor maneja el 401
+      }
+    }, 30000);
+
+    return () => clearInterval(verificarToken);
   }, []);
 
   const login = async (codigo_identificacion: string, contrasena: string) => {
@@ -46,15 +70,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('tulab_token', token);
     localStorage.setItem('tulab_encargado', JSON.stringify(encargado));
     socket.connect();
-  };
-
-  const logout = () => {
-    setToken(null);
-    setEncargado(null);
-    removeAuthToken();
-    localStorage.removeItem('tulab_token');
-    localStorage.removeItem('tulab_encargado');
-    socket.disconnect();
   };
 
   return (
