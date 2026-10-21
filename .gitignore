@@ -28,3 +28,7 @@ terminal/public/sw.js.map
 
 # Panel
 panel/dist/
+
+# Exports
+*.xlsx
+*.csv

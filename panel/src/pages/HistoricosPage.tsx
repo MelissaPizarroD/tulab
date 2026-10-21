@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import { DetallePersonaModal } from '../components/DetallePersonaModal';
+import { exportarRegistrosExcel, exportarTurnosExcel, exportarResumenHTML } from '../services/exportService';
 
 interface RegistroHistorico {
   id_registro: number;
@@ -23,6 +24,7 @@ interface RegistroHistorico {
   telefono: string | null;
   institucion: string | null;
   timestamp_expiracion: string | null;
+  id_visitante: number | null;
 }
 
 interface Turno {
@@ -32,6 +34,7 @@ interface Turno {
   hora_cierre: string | null;
   estado: string;
   observaciones_apertura: string;
+  observaciones_cierre: string | null;
 }
 
 export const HistoricosPage = () => {
@@ -183,6 +186,43 @@ export const HistoricosPage = () => {
           >
             {buscando ? 'Buscando...' : 'Buscar'}
           </button>
+
+          {registros.length > 0 && pestana === 'registros' && (
+            <>
+              <button
+                onClick={() => exportarRegistrosExcel(registros, `registros_${fecha || 'todos'}`)}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', border: 'none',
+                  background: '#166534', color: 'white', cursor: 'pointer',
+                  fontWeight: 'bold', fontSize: '14px'
+                }}
+              >
+                Exportar Excel
+              </button>
+              <button
+                onClick={() => exportarResumenHTML(registros, turnos[0])}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', border: 'none',
+                  background: '#1d4ed8', color: 'white', cursor: 'pointer',
+                  fontWeight: 'bold', fontSize: '14px'
+                }}
+              >
+                Imprimir PDF
+              </button>
+            </>
+          )}
+          {turnos.length > 0 && pestana === 'turnos' && (
+            <button
+              onClick={() => exportarTurnosExcel(turnos, `turnos_${fecha || 'todos'}`)}
+              style={{
+                padding: '10px 20px', borderRadius: '8px', border: 'none',
+                background: '#166534', color: 'white', cursor: 'pointer',
+                fontWeight: 'bold', fontSize: '14px'
+              }}
+            >
+              Exportar Excel
+            </button>
+          )}
         </div>
 
         <div style={{
