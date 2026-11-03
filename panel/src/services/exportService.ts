@@ -25,6 +25,8 @@ export const exportarTurnosExcel = (turnos: any[], nombreArchivo: string) => {
     'Hora apertura': t.hora_apertura?.slice(0, 5),
     'Hora cierre': t.hora_cierre?.slice(0, 5) || 'En curso',
     'Estado': t.estado,
+    'Encargado apertura': t.nombre_encargado_apertura,
+    'Encargado cierre': t.nombre_encargado_cierre || '-',
     'Observaciones apertura': t.observaciones_apertura || '-',
     'Observaciones cierre': t.observaciones_cierre || '-'
   }));

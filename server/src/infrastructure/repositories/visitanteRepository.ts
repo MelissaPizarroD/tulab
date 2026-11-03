@@ -33,6 +33,29 @@ export const visitanteRepository = {
       [id_visitante]
     );
     return result.rows[0];
+  },
+
+  async actualizarExpiracion(id_visitante: number, timestamp_expiracion: Date) {
+  const result = await pool.query(
+    `UPDATE visitante SET timestamp_expiracion = $1
+     WHERE id_visitante = $2 RETURNING *`,
+    [timestamp_expiracion, id_visitante]
+  );
+  return result.rows[0];
+  },
+  
+  async obtenerVigentes() {
+    const result = await pool.query(
+      `SELECT v.*,
+              EXISTS (
+                SELECT 1 FROM registro_acceso ra
+                WHERE ra.id_visitante = v.id_visitante AND ra.estado = 'activo'
+              ) AS ha_ingresado
+      FROM visitante v
+      WHERE v.estado = 'activo' AND v.timestamp_expiracion > NOW()
+      ORDER BY v.timestamp_generacion DESC`
+    );
+    return result.rows;
   }
 
 };

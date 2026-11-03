@@ -35,6 +35,8 @@ interface Turno {
   estado: string;
   observaciones_apertura: string;
   observaciones_cierre: string | null;
+  nombre_encargado_apertura: string;
+  nombre_encargado_cierre: string | null;
 }
 
 export const HistoricosPage = () => {
@@ -314,6 +316,10 @@ export const HistoricosPage = () => {
                         </p>
                         <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '13px' }}>
                           {t.hora_apertura?.slice(0, 5)} - {t.hora_cierre?.slice(0, 5) || 'En curso'}
+                        </p>
+                        <p style={{ margin: '4px 0 0', color: '#475569', fontSize: '13px' }}>
+                          Abrió: {t.nombre_encargado_apertura}
+                          {t.nombre_encargado_cierre && ` · Cerró: ${t.nombre_encargado_cierre}`}
                         </p>
                         {t.observaciones_apertura && (
                           <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '12px' }}>

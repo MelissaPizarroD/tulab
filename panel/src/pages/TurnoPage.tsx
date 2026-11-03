@@ -5,6 +5,7 @@ import { ProgramacionRecursos } from '../components/ProgramacionRecursos';
 import { Bitacora } from '../components/Bitacora';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { VisitantesActivos } from '../components/VisitantesActivos';
 
 interface Turno {
   id_turno: number;
@@ -12,6 +13,7 @@ interface Turno {
   hora_apertura: string;
   hora_cierre: string | null;
   estado: string;
+  nombre_encargado_apertura: string;
 }
 
 export const TurnoPage = () => {
@@ -79,6 +81,12 @@ export const TurnoPage = () => {
         }}>
           {turno ? (
             <>
+              <div style={{
+                background: 'white', borderRadius: '12px', padding: '24px',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
+              }}>
+                <VisitantesActivos id_turno={turno.id_turno} />
+              </div>
               <div>
                 <span style={{
                   display: 'inline-block', padding: '4px 12px',
@@ -90,8 +98,8 @@ export const TurnoPage = () => {
                 </span>
                 <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
                   Apertura: {new Date(turno.fecha_apertura).toLocaleDateString('es-CO', {
-                  day: '2-digit', month: '2-digit', year: 'numeric'
-                  })} · {turno.hora_apertura?.slice(0, 5)}
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                  })} · {turno.hora_apertura?.slice(0, 5)} · {turno.nombre_encargado_apertura}
                 </p>
               </div>
               <button

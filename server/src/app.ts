@@ -18,6 +18,7 @@ import programacionRecursoRoutes from './presentation/routes/programacionRecurso
 import configuracionRoutes from './presentation/routes/configuracionRoutes';
 import sincronizacionRoutes from './presentation/routes/sincronizacionRoutes';
 import equipoRoutes from './presentation/routes/equipoRoutes';
+import { visitanteService } from './services/visitanteService';
 
 
 dotenv.config();
@@ -65,5 +66,9 @@ const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   console.log(`Servidor TuLab corriendo en puerto ${PORT}`);
 });
+
+setInterval(async () => {
+  await visitanteService.expirarVisitantesVencidos();
+}, 60000);
 
 export { io };

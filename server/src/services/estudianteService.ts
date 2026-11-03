@@ -1,6 +1,7 @@
 import { estudianteRepository } from '../infrastructure/repositories/estudianteRepository';
 import { visitanteRepository } from '../infrastructure/repositories/visitanteRepository';
 import { institucionalAdapter } from '../infrastructure/adapters/institucionalAdapter';
+import { io } from '../app';
 
 const generarCodigoTemporal = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -33,7 +34,7 @@ export const estudianteService = {
       codigo_temporal,
       timestamp_expiracion
     });
-
+    io.emit('visitante_actualizado');
     return visitante;
   },
 
@@ -50,6 +51,14 @@ export const estudianteService = {
       throw new Error('Código temporal expirado');
     }
     return visitante;
-  }
+  },
 
+  async actualizarExpiracionVisitante(id_visitante: number, timestamp_expiracion: string) {
+  const nuevaExpiracion = new Date(timestamp_expiracion);
+  if (nuevaExpiracion <= new Date()) {
+    throw new Error('La nueva hora de expiración debe ser futura');
+  }
+  const visitante = await visitanteRepository.actualizarExpiracion(id_visitante, nuevaExpiracion);
+  io.emit('visitante_actualizado');
+  return visitante;  }
 };

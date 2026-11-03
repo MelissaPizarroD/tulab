@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { api } from '../services/api';
 
 interface Visitante {
@@ -10,50 +10,6 @@ interface Visitante {
   telefono: string | null;
   institucion: string | null;
 }
-
-const Countdown = ({ timestamp_expiracion }: { timestamp_expiracion: string }) => {
-  const calcularRestante = () => {
-    const diff = new Date(timestamp_expiracion).getTime() - Date.now();
-    if (diff <= 0) return null;
-    const horas = Math.floor(diff / 3600000);
-    const minutos = Math.floor((diff % 3600000) / 60000);
-    const segundos = Math.floor((diff % 60000) / 1000);
-    return { horas, minutos, segundos };
-  };
-
-  const [restante, setRestante] = useState(calcularRestante());
-
-  useEffect(() => {
-    const intervalo = setInterval(() => {
-      setRestante(calcularRestante());
-    }, 1000);
-    return () => clearInterval(intervalo);
-  }, [timestamp_expiracion]);
-
-  if (!restante) {
-    return (
-      <p style={{ margin: '8px 0 16px', color: '#dc2626', fontSize: '13px', fontWeight: 'bold' }}>
-        Código expirado
-      </p>
-    );
-  }
-
-  const urgente = restante.horas === 0 && restante.minutos < 30;
-
-  return (
-    <p style={{
-      margin: '8px 0 16px', fontSize: '13px',
-      color: urgente ? '#dc2626' : '#64748b'
-    }}>
-      Expira en: {restante.horas > 0 && `${restante.horas}h `}
-      {String(restante.minutos).padStart(2, '0')}m {String(restante.segundos).padStart(2, '0')}s
-      {' · '}
-      Válido hasta: {new Date(timestamp_expiracion).toLocaleTimeString('es-CO', {
-        hour: '2-digit', minute: '2-digit'
-      })}
-    </p>
-  );
-};
 
 export const RegistroVisitante = () => {
   const [form, setForm] = useState({
@@ -130,7 +86,11 @@ export const RegistroVisitante = () => {
               {visitante.codigo_temporal}
             </p>
           </div>
-          <Countdown timestamp_expiracion={visitante.timestamp_expiracion} />
+          <p style={{ margin: '8px 0 16px', color: '#64748b', fontSize: '12px' }}>
+            Válido hasta: {new Date(visitante.timestamp_expiracion).toLocaleTimeString('es-CO', {
+              hour: '2-digit', minute: '2-digit'
+            })}
+          </p>
           <button
             onClick={handleNuevo}
             style={{
