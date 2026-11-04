@@ -1,7 +1,7 @@
 import { estudianteRepository } from '../infrastructure/repositories/estudianteRepository';
 import { visitanteRepository } from '../infrastructure/repositories/visitanteRepository';
 import { institucionalAdapter } from '../infrastructure/adapters/institucionalAdapter';
-import { io } from '../app';
+import { emitirEvento } from '../infrastructure/realtime/socketServer';
 
 const generarCodigoTemporal = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -34,7 +34,7 @@ export const estudianteService = {
       codigo_temporal,
       timestamp_expiracion
     });
-    io.emit('visitante_actualizado');
+    emitirEvento('visitante_actualizado', visitante);
     return visitante;
   },
 
@@ -59,6 +59,6 @@ export const estudianteService = {
     throw new Error('La nueva hora de expiración debe ser futura');
   }
   const visitante = await visitanteRepository.actualizarExpiracion(id_visitante, nuevaExpiracion);
-  io.emit('visitante_actualizado');
+  emitirEvento('visitante_actualizado', visitante);
   return visitante;  }
 };

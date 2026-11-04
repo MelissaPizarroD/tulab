@@ -2,7 +2,7 @@ process.env.TZ = 'America/Bogota';
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
+import { initSocket } from './infrastructure/realtime/socketServer';
 import { config } from './config/env';
 import './infrastructure/database/connection';
 import turnoRoutes from './presentation/routes/turnoRoutes';
@@ -22,22 +22,14 @@ import { visitanteService } from './services/visitanteService';
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: { origin: '*' }
-});
+
+initSocket(httpServer);
 
 app.use(cors());
 app.use(express.json());
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
-});
-
-io.on('connection', (socket) => {
-  console.log('Panel conectado:', socket.id);
-  socket.on('disconnect', () => {
-    console.log('Panel desconectado:', socket.id);
-  });
 });
 
 app.use('/api/turnos', turnoRoutes);
@@ -67,5 +59,3 @@ httpServer.listen(config.port, () => {
 setInterval(async () => {
   await visitanteService.expirarVisitantesVencidos();
 }, 60000);
-
-export { io };

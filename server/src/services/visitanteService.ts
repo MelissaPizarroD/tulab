@@ -1,6 +1,6 @@
 import { visitanteRepository } from '../infrastructure/repositories/visitanteRepository';
 import pool from '../infrastructure/database/connection';
-import { io } from '../app';
+import { emitirEvento } from '../infrastructure/realtime/socketServer';
 
 export const visitanteService = {
 
@@ -32,7 +32,7 @@ export const visitanteService = {
     }
 
     if (result.rows.length > 0) {
-      io.emit('visitante_actualizado');
+      emitirEvento('visitante_actualizado');
       console.log(`${result.rows.length} visitantes expirados`);
     }
   }

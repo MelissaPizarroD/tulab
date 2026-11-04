@@ -2,7 +2,7 @@ import { sesionEquipoRepository } from '../infrastructure/repositories/sesionEqu
 import { registroAccesoRepository } from '../infrastructure/repositories/registroAccesoRepository';
 import { turnoRepository } from '../infrastructure/repositories/turnoRepository';
 import { estudianteService } from './estudianteService';
-import { io } from '../app';
+import { emitirEvento } from '../infrastructure/realtime/socketServer';
 
 export const sesionEquipoService = {
 
@@ -45,7 +45,7 @@ export const sesionEquipoService = {
       id_dispositivo: data.id_dispositivo
     });
 
-    io.emit('sesion_iniciada', sesion);
+    emitirEvento('sesion_iniciada', sesion);
 
     return sesion;
   },
@@ -61,7 +61,7 @@ export const sesionEquipoService = {
 
     const sesionCerrada = await sesionEquipoRepository.cerrar(sesion.id_sesion, data.motivo_cierre);
 
-    io.emit('sesion_cerrada', sesionCerrada);
+    emitirEvento('sesion_cerrada', sesionCerrada);
 
     return sesionCerrada;
   },

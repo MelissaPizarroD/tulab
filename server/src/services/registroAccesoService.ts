@@ -1,7 +1,7 @@
 import { registroAccesoRepository } from '../infrastructure/repositories/registroAccesoRepository';
 import { turnoRepository } from '../infrastructure/repositories/turnoRepository';
 import { estudianteService } from './estudianteService';
-import { io } from '../app';
+import { emitirEvento } from '../infrastructure/realtime/socketServer';
 
 export const registroAccesoService = {
 
@@ -44,7 +44,7 @@ export const registroAccesoService = {
       origen_registro: data.origen_registro
     });
 
-    io.emit('entrada_registrada', registro);
+    emitirEvento('entrada_registrada', registro);
 
     return registro;
   },
@@ -73,7 +73,7 @@ export const registroAccesoService = {
 
     const registroActualizado = await registroAccesoRepository.registrarSalida(registro.id_registro);
 
-    io.emit('salida_registrada', registroActualizado);
+    emitirEvento('salida_registrada', registroActualizado);
 
     return registroActualizado;
   },
