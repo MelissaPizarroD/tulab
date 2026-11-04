@@ -1,8 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { config } from '../config/env';
 import { encargadoRepository } from '../infrastructure/repositories/encargadoRepository';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 export const authService = {
 
@@ -22,7 +21,7 @@ export const authService = {
         id_encargado: encargado.id_encargado,
         rol: encargado.rol
       },
-      JWT_SECRET,
+      config.jwtSecret,
       { expiresIn: '8h' }
     );
 

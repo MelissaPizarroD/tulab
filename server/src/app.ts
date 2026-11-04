@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import dotenv from 'dotenv';
+import { config } from './config/env';
 import './infrastructure/database/connection';
 import turnoRoutes from './presentation/routes/turnoRoutes';
 import authRoutes from './presentation/routes/authRoutes';
@@ -19,9 +19,6 @@ import configuracionRoutes from './presentation/routes/configuracionRoutes';
 import sincronizacionRoutes from './presentation/routes/sincronizacionRoutes';
 import equipoRoutes from './presentation/routes/equipoRoutes';
 import { visitanteService } from './services/visitanteService';
-
-
-dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
@@ -63,8 +60,8 @@ app.use('/api/sincronizacion', sincronizacionRoutes);
 app.use('/api/equipos', equipoRoutes);
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => {
-  console.log(`Servidor TuLab corriendo en puerto ${PORT}`);
+httpServer.listen(config.port, () => {
+  console.log(`Servidor TuLab corriendo en puerto ${config.port}`);
 });
 
 setInterval(async () => {

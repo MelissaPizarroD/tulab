@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+import { config } from '../../config/env';
 
 export interface AuthRequest extends Request {
   encargado?: {
@@ -18,7 +17,7 @@ export const verificarToken = (req: AuthRequest, res: Response, next: NextFuncti
 
   const token = authHeader.split(' ')[1];
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as any;
+    const payload = jwt.verify(token, config.jwtSecret) as any;
     req.encargado = {
       id_encargado: payload.id_encargado,
       rol: payload.rol
