@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/main/index.js",
   "scripts": {
-    "dev": "concurrently \"vite --port 5174\" \"wait-on http://localhost:5174 && cross-env NODE_ENV=development electron .\"",
+    "dev": "concurrently \"vite --port 5175 --strictPort\" \"wait-on http://localhost:5175 && cross-env NODE_ENV=development electron .\"",
     "build": "vite build && tsc -p tsconfig.main.json",
     "package": "electron-builder"
   },
