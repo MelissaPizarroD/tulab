@@ -3,6 +3,7 @@ import { registroAccesoRepository } from '../infrastructure/repositories/registr
 import { turnoRepository } from '../infrastructure/repositories/turnoRepository';
 import { estudianteService } from './estudianteService';
 import { emitirEvento } from '../infrastructure/realtime/socketServer';
+import { visitanteService } from './visitanteService';
 
 export const sesionEquipoService = {
 
@@ -23,7 +24,7 @@ export const sesionEquipoService = {
 
     let registro;
     if (data.codigo.length === 6 && !isNaN(Number(data.codigo))) {
-      const visitante = await estudianteService.validarCodigoTemporal(data.codigo);
+      const visitante = await visitanteService.validarCodigoTemporal(data.codigo);
       registro = await registroAccesoRepository.buscarActivoPorVisitante(visitante.id_visitante, turno.id_turno);
     } else {
       const estudiante = await estudianteService.validarCodigo(data.codigo);

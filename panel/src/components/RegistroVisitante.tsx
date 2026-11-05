@@ -32,7 +32,7 @@ export const RegistroVisitante = () => {
     setEnviando(true);
     setError('');
     try {
-      const response = await api.post('/api/estudiantes/visitantes', {
+      const response = await api.post('/api/visitantes', {
         nombre: form.nombre,
         motivo_visita: form.motivo_visita || undefined,
         email: form.email || undefined,

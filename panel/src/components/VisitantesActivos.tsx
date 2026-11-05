@@ -20,7 +20,7 @@ export const VisitantesActivos = ({ id_turno }: { id_turno: number }) => {
 
   const cargarVisitantes = async () => {
     try {
-      const response = await api.get(`/api/estudiantes/visitantes/turno/${id_turno}`);
+      const response = await api.get('/api/visitantes/vigentes');
       setVisitantes(response.data);
     } catch (error) {
       console.error('Error cargando visitantes:', error);
@@ -51,7 +51,7 @@ export const VisitantesActivos = ({ id_turno }: { id_turno: number }) => {
     const hoy = new Date().toLocaleDateString('en-CA');
     const nuevaExpiracion = new Date(`${hoy}T${hora}:00`);
     try {
-      await api.patch(`/api/estudiantes/visitantes/${id_visitante}/expiracion`, {
+      await api.patch(`/api/visitantes/${id_visitante}/expiracion`, {
         timestamp_expiracion: nuevaExpiracion.toISOString()
       });
       await cargarVisitantes();

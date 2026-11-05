@@ -2,6 +2,14 @@ import pool from '../database/connection';
 
 export const dispositivoRepository = {
 
+  async marcarDesconectados() {
+  await pool.query(
+    `UPDATE dispositivo SET estado_conexion = 'desconectado'
+     WHERE ultima_conexion < NOW() - INTERVAL '1 minute'
+     AND estado_conexion = 'conectado'`
+    );
+  },
+
   async buscarPorIp(direccion_ip: string) {
     const result = await pool.query(
       `SELECT * FROM dispositivo WHERE direccion_ip = $1 AND activo = true`,

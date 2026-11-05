@@ -1,39 +1,78 @@
 import { visitanteRepository } from '../infrastructure/repositories/visitanteRepository';
-import pool from '../infrastructure/database/connection';
 import { emitirEvento } from '../infrastructure/realtime/socketServer';
+
+const generarCodigoTemporal = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
 export const visitanteService = {
 
-  async expirarVisitantesVencidos() {
-    const result = await pool.query(
-      `SELECT id_visitante FROM visitante 
-       WHERE estado = 'activo' 
-       AND timestamp_expiracion < NOW()`
-    );
-
-    for (const v of result.rows) {
-      await visitanteRepository.expirar(v.id_visitante);
-
-      await pool.query(
-        `UPDATE registro_acceso 
-         SET hora_salida = NOW(), estado = 'cerrado'
-         WHERE id_visitante = $1 AND estado = 'activo'`,
-        [v.id_visitante]
-      );
-
-      await pool.query(
-        `UPDATE sesion_equipo SET hora_cierre = NOW(), estado = 'cerrada', motivo_cierre = 'inactividad'
-         WHERE id_registro IN (
-           SELECT id_registro FROM registro_acceso 
-           WHERE id_visitante = $1
-         ) AND estado = 'activa'`,
-        [v.id_visitante]
-      );
+  async registrar(data: {
+    nombre: string;
+    motivo_visita?: string;
+    email?: string;
+    telefono?: string;
+    institucion?: string;
+  }) {
+    if (!data.nombre || !data.nombre.trim()) {
+      throw new Error('El nombre del visitante es obligatorio');
     }
 
-    if (result.rows.length > 0) {
+    const codigo_temporal = generarCodigoTemporal();
+    const timestamp_expiracion = new Date();
+    timestamp_expiracion.setHours(timestamp_expiracion.getHours() + 8);
+
+    const visitante = await visitanteRepository.crear({
+      ...data,
+      codigo_temporal,
+      timestamp_expiracion
+    });
+
+    emitirEvento('visitante_actualizado');
+    return visitante;
+  },
+
+  async validarCodigoTemporal(codigo_temporal: string) {
+    const visitante = await visitanteRepository.buscarPorCodigo(codigo_temporal);
+    if (!visitante) {
+      throw new Error('Código temporal no encontrado');
+    }
+    if (visitante.estado === 'expirado') {
+      throw new Error('Código temporal expirado');
+    }
+    if (new Date() > new Date(visitante.timestamp_expiracion)) {
+      await visitanteRepository.expirar(visitante.id_visitante);
+      throw new Error('Código temporal expirado');
+    }
+    return visitante;
+  },
+
+  async actualizarExpiracion(id_visitante: number, timestamp_expiracion: string) {
+    const nuevaExpiracion = new Date(timestamp_expiracion);
+    if (nuevaExpiracion <= new Date()) {
+      throw new Error('La nueva hora de expiración debe ser futura');
+    }
+    const visitante = await visitanteRepository.actualizarExpiracion(id_visitante, nuevaExpiracion);
+    emitirEvento('visitante_actualizado');
+    return visitante;
+  },
+
+  async obtenerVigentes() {
+    return await visitanteRepository.obtenerVigentes();
+  },
+
+  async expirarVisitantesVencidos() {
+    const vencidos = await visitanteRepository.obtenerVencidos();
+
+    for (const v of vencidos) {
+      await visitanteRepository.expirar(v.id_visitante);
+      await visitanteRepository.cerrarSesionesActivas(v.id_visitante);
+      await visitanteRepository.cerrarRegistrosActivos(v.id_visitante);
+    }
+
+    if (vencidos.length > 0) {
+      console.log(`${vencidos.length} visitantes expirados`);
       emitirEvento('visitante_actualizado');
-      console.log(`${result.rows.length} visitantes expirados`);
     }
   }
 

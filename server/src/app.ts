@@ -19,6 +19,7 @@ import configuracionRoutes from './presentation/routes/configuracionRoutes';
 import sincronizacionRoutes from './presentation/routes/sincronizacionRoutes';
 import equipoRoutes from './presentation/routes/equipoRoutes';
 import { visitanteService } from './services/visitanteService';
+import visitanteRoutes from './presentation/routes/visitanteRoutes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -50,6 +51,7 @@ app.use('/api/programaciones', programacionRecursoRoutes);
 app.use('/api/configuracion', configuracionRoutes);
 app.use('/api/sincronizacion', sincronizacionRoutes);
 app.use('/api/equipos', equipoRoutes);
+app.use('/api/visitantes', visitanteRoutes);
 
 const PORT = process.env.PORT || 3000;
 httpServer.listen(config.port, () => {
