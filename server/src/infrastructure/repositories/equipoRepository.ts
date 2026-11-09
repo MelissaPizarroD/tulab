@@ -9,6 +9,14 @@ export const equipoRepository = {
     return result.rows;
   },
 
+  async buscarPorNumero(numero_equipo: number) {
+    const result = await pool.query(
+      `SELECT * FROM equipo WHERE numero_equipo = $1`,
+      [numero_equipo]
+    );
+    return result.rows[0] || null;
+  },
+
   async crear(data: { numero_equipo: number; descripcion?: string }) {
     const result = await pool.query(
       `INSERT INTO equipo (numero_equipo, estado, descripcion)

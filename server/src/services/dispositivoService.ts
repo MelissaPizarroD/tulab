@@ -1,5 +1,5 @@
 import { dispositivoRepository } from '../infrastructure/repositories/dispositivoRepository';
-import pool from '../infrastructure/database/connection';
+import { equipoRepository } from '../infrastructure/repositories/equipoRepository';
 
 export const dispositivoService = {
 
@@ -7,14 +7,33 @@ export const dispositivoService = {
     tipo: string;
     nombre: string;
     direccion_ip: string;
-    id_equipo?: number;
+    numero_equipo?: number;
   }) {
-    const existente = await dispositivoRepository.buscarPorIp(data.direccion_ip);
-    if (existente) {
-      await dispositivoRepository.actualizarConexion(existente.id_dispositivo, 'conectado');
-      return existente;
+    let id_equipo: number | undefined;
+
+    if (data.numero_equipo) {
+      const equipo = await equipoRepository.buscarPorNumero(Number(data.numero_equipo));
+      if (!equipo) {
+        throw new Error(`El equipo ${data.numero_equipo} no está registrado. Créalo primero en el Panel.`);
+      }
+      id_equipo = equipo.id_equipo;
     }
-    return await dispositivoRepository.crear(data);
+
+    const existente = await dispositivoRepository.buscarPorIpYTipo(data.direccion_ip, data.tipo);
+
+    if (existente) {
+      if (id_equipo && existente.id_equipo !== id_equipo) {
+        await dispositivoRepository.actualizarEquipo(existente.id_dispositivo, id_equipo);
+      }
+      return await dispositivoRepository.actualizarConexion(existente.id_dispositivo, 'conectado');
+    }
+
+    return await dispositivoRepository.crear({
+      tipo: data.tipo,
+      nombre: data.nombre,
+      direccion_ip: data.direccion_ip,
+      id_equipo
+    });
   },
 
   async heartbeat(id_dispositivo: number) {
@@ -29,12 +48,8 @@ export const dispositivoService = {
     return await dispositivoRepository.obtenerTodos();
   },
 
-    async marcarDesconectados() {
-    await pool.query(
-        `UPDATE dispositivo SET estado_conexion = 'desconectado'
-        WHERE ultima_conexion < NOW() - INTERVAL '1 minute'
-        AND estado_conexion = 'conectado'`
-    );
-    }
+  async marcarDesconectados() {
+    await dispositivoRepository.marcarDesconectados();
+  }
 
 };

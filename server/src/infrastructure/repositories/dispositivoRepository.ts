@@ -2,18 +2,18 @@ import pool from '../database/connection';
 
 export const dispositivoRepository = {
 
-  async marcarDesconectados() {
-  await pool.query(
-    `UPDATE dispositivo SET estado_conexion = 'desconectado'
-     WHERE ultima_conexion < NOW() - INTERVAL '1 minute'
-     AND estado_conexion = 'conectado'`
-    );
-  },
-
   async buscarPorIp(direccion_ip: string) {
     const result = await pool.query(
       `SELECT * FROM dispositivo WHERE direccion_ip = $1 AND activo = true`,
       [direccion_ip]
+    );
+    return result.rows[0] || null;
+  },
+
+  async buscarPorIpYTipo(direccion_ip: string, tipo: string) {
+    const result = await pool.query(
+      `SELECT * FROM dispositivo WHERE direccion_ip = $1 AND tipo = $2 AND activo = true`,
+      [direccion_ip, tipo]
     );
     return result.rows[0] || null;
   },
@@ -40,6 +40,14 @@ export const dispositivoRepository = {
     return result.rows[0];
   },
 
+  async actualizarEquipo(id_dispositivo: number, id_equipo: number) {
+    const result = await pool.query(
+      `UPDATE dispositivo SET id_equipo = $1 WHERE id_dispositivo = $2 RETURNING *`,
+      [id_equipo, id_dispositivo]
+    );
+    return result.rows[0];
+  },
+
   async actualizarConexion(id_dispositivo: number, estado_conexion: string) {
     const result = await pool.query(
       `UPDATE dispositivo SET estado_conexion = $1, ultima_conexion = NOW()
@@ -57,6 +65,14 @@ export const dispositivoRepository = {
        ORDER BY d.tipo, d.nombre`
     );
     return result.rows;
+  },
+
+  async marcarDesconectados() {
+    await pool.query(
+      `UPDATE dispositivo SET estado_conexion = 'desconectado'
+       WHERE ultima_conexion < NOW() - INTERVAL '1 minute'
+       AND estado_conexion = 'conectado'`
+    );
   }
 
 };

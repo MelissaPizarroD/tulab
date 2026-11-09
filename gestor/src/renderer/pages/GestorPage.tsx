@@ -31,36 +31,23 @@ export const GestorPage = () => {
   const [idEquipo, setIdEquipo] = useState<number | null>(null);
   const [idDispositivo, setIdDispositivo] = useState<number | null>(null);
   const { conectado } = useConexion();
+  const [numeroEquipo, setNumeroEquipo] = useState<number | null>(null);
 
   useEffect(() => {
     const cargarDispositivo = async () => {
       const db = await getDB();
       const equipo = await db.get('configuracion', 'id_equipo');
       const dispositivo = await db.get('configuracion', 'id_dispositivo');
+      const numero = await db.get('configuracion', 'numero_equipo');
 
       if (equipo && dispositivo) {
         setIdEquipo(Number(equipo.valor));
         setIdDispositivo(Number(dispositivo.valor));
-      } else {
-        try {
-          const response = await api.post('/api/dispositivos/registrar', {
-            tipo: 'gestor_sesiones',
-            nombre: 'Gestor PC'
-          });
-          const idEq = response.data.id_equipo;
-          const idDisp = response.data.id_dispositivo;
-          await db.put('configuracion', { clave: 'id_equipo', valor: String(idEq) });
-          await db.put('configuracion', { clave: 'id_dispositivo', valor: String(idDisp) });
-          setIdEquipo(idEq);
-          setIdDispositivo(idDisp);
-        } catch {
-          console.error('No se pudo registrar el dispositivo');
-        }
+        if (numero) setNumeroEquipo(Number(numero.valor));
       }
     };
     cargarDispositivo();
   }, []);
-
   useEffect(() => {
     const cargarConfig = async () => {
       const tiempo = await obtenerConfiguracion('tiempo_inactividad_minutos');
@@ -172,16 +159,20 @@ export const GestorPage = () => {
             const response = await api.post('/api/dispositivos/registrar', {
               tipo: 'gestor_sesiones',
               nombre: `Gestor PC-${numero}`,
-              id_equipo: numero
+              numero_equipo: numero
             });
+            const idEq = response.data.id_equipo;
+            const idDisp = response.data.id_dispositivo;
             const db = await getDB();
-            await db.put('configuracion', { clave: 'id_equipo', valor: String(numero) });
-            await db.put('configuracion', { clave: 'id_dispositivo', valor: String(response.data.id_dispositivo) });
-            setIdEquipo(numero);
-            window.electron.setIdEquipo(numero);
-            setIdDispositivo(response.data.id_dispositivo);
-          } catch {
-            alert('Error al configurar el equipo');
+            await db.put('configuracion', { clave: 'id_equipo', valor: String(idEq) });
+            await db.put('configuracion', { clave: 'numero_equipo', valor: String(numero) });
+            await db.put('configuracion', { clave: 'id_dispositivo', valor: String(idDisp) });
+            setIdEquipo(idEq);
+            setNumeroEquipo(numero);
+            setIdDispositivo(idDisp);
+            window.electron.setIdEquipo(idEq);
+          } catch (error: any) {
+            alert(error.response?.data?.mensaje || 'Error al configurar el equipo');
           }
         }}
         style={{
@@ -218,7 +209,7 @@ export const GestorPage = () => {
       </div>
 
       <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '8px', color: '#1e293b' }}>
-        Equipo {idEquipo}
+        Equipo {numeroEquipo ?? idEquipo}
       </h1>
 
       {estadoSesion === 'sin_sesion' ? (
