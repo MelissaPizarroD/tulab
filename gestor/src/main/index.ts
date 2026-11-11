@@ -2,6 +2,8 @@ import { app, BrowserWindow, Tray, Menu, globalShortcut, nativeImage, ipcMain, n
 import path from 'path';
 
 const isDev = process.env.NODE_ENV === 'development';
+const API_URL = process.env.API_URL || 'http://localhost:3000';
+
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let idEquipoActual: number | null = null;
@@ -67,7 +69,7 @@ const cerrarSesionAlApagar = () => {
 
   const request = net.request({
     method: 'POST',
-    url: 'http://localhost:3000/api/sesiones/cerrar'
+    url: `${API_URL}/api/sesiones/cerrar`
   });
   request.setHeader('Content-Type', 'application/json');
   request.write(JSON.stringify({

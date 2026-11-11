@@ -1,14 +1,15 @@
 # Dependencias
 node_modules/
 
-# Builds
+# Builds (dist/ cubre server, terminal, panel y gestor)
 dist/
 build/
-terminal/dist/
-gestor/dist/
 gestor/release/
 
-# Variables de entorno
+# TypeScript
+*.tsbuildinfo
+
+# Variables de entorno con secretos (los .env.development y .env.production se versionan)
 .env
 
 # Logs
@@ -20,15 +21,12 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
-# VS Code
+# Editor
 .vscode/
 
 # PWA
 terminal/public/sw.js.map
 
-# Panel
-panel/dist/
-
-# Exports
+# Exportaciones generadas
 *.xlsx
 *.csv

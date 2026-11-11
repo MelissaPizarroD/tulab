@@ -1,16 +1,16 @@
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 
 export const api = axios.create({
   baseURL: API_URL,
   timeout: 5000
 });
 
-export const socket = io(API_URL, {
-  autoConnect: false
-});
+export const socket = API_URL
+  ? io(API_URL, { autoConnect: false })
+  : io({ autoConnect: false });
 
 export const setAuthToken = (token: string) => {
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;

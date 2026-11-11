@@ -20,6 +20,7 @@ import sincronizacionRoutes from './presentation/routes/sincronizacionRoutes';
 import equipoRoutes from './presentation/routes/equipoRoutes';
 import { visitanteService } from './services/visitanteService';
 import visitanteRoutes from './presentation/routes/visitanteRoutes';
+import path from 'path';
 
 const app = express();
 const httpServer = createServer(app);
@@ -52,6 +53,18 @@ app.use('/api/configuracion', configuracionRoutes);
 app.use('/api/sincronizacion', sincronizacionRoutes);
 app.use('/api/equipos', equipoRoutes);
 app.use('/api/visitantes', visitanteRoutes);
+
+const raiz = path.resolve(__dirname, '../../');
+
+app.use('/terminal', express.static(path.join(raiz, 'terminal/dist')));
+app.use('/terminal', (_req, res) =>
+  res.sendFile(path.join(raiz, 'terminal/dist/index.html')));
+
+app.use('/panel', express.static(path.join(raiz, 'panel/dist')));
+app.use('/panel', (_req, res) =>
+  res.sendFile(path.join(raiz, 'panel/dist/index.html')));
+
+app.get('/', (_req, res) => res.redirect('/panel'));
 
 const PORT = process.env.PORT || 3000;
 httpServer.listen(config.port, () => {

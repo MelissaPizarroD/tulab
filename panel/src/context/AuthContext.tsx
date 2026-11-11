@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('tulab_token');
     localStorage.removeItem('tulab_encargado');
     socket.disconnect();
-    window.location.href = '/login';
+    window.location.href = '/panel/login';;
   };
 
   useEffect(() => {

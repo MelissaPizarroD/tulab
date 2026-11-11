@@ -15,7 +15,7 @@ const RutaProtegida = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/panel">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={

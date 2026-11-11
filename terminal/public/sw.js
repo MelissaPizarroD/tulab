@@ -1,5 +1,5 @@
 const CACHE_NAME = 'tulab-terminal-v1';
-const ASSETS = ['/', '/index.html'];
+const ASSETS = ['/terminal/', '/terminal/index.html'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
