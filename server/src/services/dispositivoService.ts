@@ -1,5 +1,6 @@
 import { dispositivoRepository } from '../infrastructure/repositories/dispositivoRepository';
 import { equipoRepository } from '../infrastructure/repositories/equipoRepository';
+import { emitirEvento } from '../infrastructure/realtime/socketServer';
 
 export const dispositivoService = {
 
@@ -19,21 +20,29 @@ export const dispositivoService = {
       id_equipo = equipo.id_equipo;
     }
 
-    const existente = await dispositivoRepository.buscarPorIpYTipo(data.direccion_ip, data.tipo);
+    const existente = (data.tipo === 'gestor_sesiones' && id_equipo)
+      ? await dispositivoRepository.buscarGestorPorEquipo(id_equipo)
+      : await dispositivoRepository.buscarPorIpYTipo(data.direccion_ip, data.tipo);
 
     if (existente) {
       if (id_equipo && existente.id_equipo !== id_equipo) {
         await dispositivoRepository.actualizarEquipo(existente.id_dispositivo, id_equipo);
       }
-      return await dispositivoRepository.actualizarConexion(existente.id_dispositivo, 'conectado');
+      const actualizado = await dispositivoRepository.actualizarConexion(existente.id_dispositivo, 'conectado');
+      if (existente.estado_conexion !== 'conectado') {
+        emitirEvento('dispositivo_actualizado');
+      }
+      return actualizado;
     }
 
-    return await dispositivoRepository.crear({
+    const nuevo = await dispositivoRepository.crear({
       tipo: data.tipo,
       nombre: data.nombre,
       direccion_ip: data.direccion_ip,
       id_equipo
     });
+    emitirEvento('dispositivo_actualizado');
+    return nuevo;
   },
 
   async heartbeat(id_dispositivo: number) {
@@ -41,7 +50,11 @@ export const dispositivoService = {
     if (!dispositivo) {
       throw new Error('Dispositivo no encontrado');
     }
-    return await dispositivoRepository.actualizarConexion(id_dispositivo, 'conectado');
+    const actualizado = await dispositivoRepository.actualizarConexion(id_dispositivo, 'conectado');
+    if (dispositivo.estado_conexion !== 'conectado') {
+      emitirEvento('dispositivo_actualizado');
+    }
+    return actualizado;
   },
 
   async obtenerTodos() {
@@ -49,7 +62,11 @@ export const dispositivoService = {
   },
 
   async marcarDesconectados() {
-    await dispositivoRepository.marcarDesconectados();
+    const cambiados = await dispositivoRepository.marcarDesconectados();
+    if (cambiados > 0) {
+      emitirEvento('sesion_cerrada');
+      emitirEvento('dispositivo_actualizado');
+    }
   }
 
 };

@@ -1,41 +1,52 @@
-import { app, BrowserWindow, Tray, Menu, globalShortcut, nativeImage, ipcMain, net } from 'electron';
+import {
+  app, BrowserWindow, Tray, Menu, globalShortcut,
+  nativeImage, ipcMain, net, Notification
+} from 'electron';
 import path from 'path';
 
 const isDev = process.env.NODE_ENV === 'development';
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+const API_URL = process.env.API_URL || 'http://192.168.1.50:3000';
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let idEquipoActual: number | null = null;
+let saliendo = false;
+
+const mostrarVentana = () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+};
+
+const avisarAtajo = () => {
+  if (Notification.isSupported()) {
+    new Notification({
+      title: 'TuLab Gestor',
+      body: 'Para volver a abrir el Gestor presiona Ctrl + Shift + G o usa la barra de tareas.'
+    }).show();
+  }
+};
 
 const createTray = () => {
-  const icon = nativeImage.createEmpty();
-  tray = new Tray(icon);
-  tray.setToolTip('TuLab Gestor');
-
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Abrir Gestor',
-      click: () => {
-        mainWindow?.show();
-        mainWindow?.focus();
-      }
-    }
-  ]);
-
-  tray.setContextMenu(contextMenu);
-  tray.on('click', () => {
-    mainWindow?.show();
-    mainWindow?.focus();
-  });
+  tray = new Tray(nativeImage.createEmpty());
+  tray.setToolTip('TuLab Gestor (Ctrl + Shift + G)');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'Abrir Gestor', click: mostrarVentana }
+  ]));
+  tray.on('click', mostrarVentana);
 };
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    fullscreen: !isDev,
-    kiosk: !isDev,
+    minimizable: true,
+    maximizable: false,
+    closable: false,
+    resizable: false,
+    autoHideMenuBar: true,
+    title: 'TuLab Gestor',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -43,16 +54,36 @@ const createWindow = () => {
     }
   });
 
+  if (!isDev) {
+    mainWindow.maximize();
+  }
+
   if (isDev) {
     mainWindow.loadURL('http://localhost:5175');
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      const ctrl = input.control || input.meta;
+      const tecla = input.key.toLowerCase();
+      const bloqueado =
+        (ctrl && ['r', 'w', 'p'].includes(tecla)) ||
+        (ctrl && input.shift && tecla === 'i') ||
+        input.key === 'F12' ||
+        input.key === 'F5' ||
+        (input.alt && input.key === 'F4');
+      if (bloqueado) event.preventDefault();
+    });
   }
 
+  mainWindow.on('minimize', avisarAtajo);
+
   mainWindow.on('close', (event) => {
-    event.preventDefault();
-    mainWindow?.hide();
+    if (!saliendo) {
+      event.preventDefault();
+      mainWindow?.minimize();
+    }
   });
 };
 
@@ -80,15 +111,15 @@ const cerrarSesionAlApagar = () => {
 };
 
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
   createWindow();
   createTray();
 
   globalShortcut.register('CommandOrControl+Shift+G', () => {
-    if (mainWindow?.isVisible()) {
-      mainWindow.hide();
+    if (mainWindow?.isVisible() && !mainWindow.isMinimized()) {
+      mainWindow.minimize();
     } else {
-      mainWindow?.show();
-      mainWindow?.focus();
+      mostrarVentana();
     }
   });
 
@@ -100,6 +131,7 @@ app.on('window-all-closed', (event: any) => {
 });
 
 app.on('before-quit', () => {
+  saliendo = true;
   globalShortcut.unregisterAll();
   cerrarSesionAlApagar();
 });

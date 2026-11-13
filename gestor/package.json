@@ -28,11 +28,19 @@
   "build": {
     "appId": "com.tulab.gestor",
     "productName": "TuLab Gestor",
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
     "directories": {
       "output": "release"
     },
     "win": {
       "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": true
     }
   }
 }

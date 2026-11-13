@@ -34,6 +34,18 @@ export const GestorPage = () => {
   const [numeroEquipo, setNumeroEquipo] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!idDispositivo) return;
+
+    const latido = () => {
+      api.post(`/api/dispositivos/${idDispositivo}/heartbeat`).catch(() => {});
+    };
+
+    latido();
+    const intervalo = setInterval(latido, 30000);
+    return () => clearInterval(intervalo);
+  }, [idDispositivo]);
+
+  useEffect(() => {
     const cargarDispositivo = async () => {
       const db = await getDB();
       const equipo = await db.get('configuracion', 'id_equipo');
@@ -284,6 +296,13 @@ export const GestorPage = () => {
           onCerrar={() => setMostrarNovedad(false)}
         />
       )}
+
+      <p style={{
+        position: 'fixed', bottom: '16px', left: 0, right: 0,
+        textAlign: 'center', color: '#94a3b8', fontSize: '13px', margin: 0
+      }}>
+        Puedes minimizar esta ventana y seguir trabajando. Para volver a abrirla presiona Ctrl + Shift + G
+      </p>
     </div>
   );
 };

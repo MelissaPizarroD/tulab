@@ -69,10 +69,31 @@ export const dispositivoRepository = {
 
   async marcarDesconectados() {
     await pool.query(
-      `UPDATE dispositivo SET estado_conexion = 'desconectado'
-       WHERE ultima_conexion < NOW() - INTERVAL '1 minute'
-       AND estado_conexion = 'conectado'`
+      `UPDATE sesion_equipo
+      SET hora_cierre = NOW(), estado = 'cerrada', motivo_cierre = 'apagado_equipo'
+      WHERE estado = 'activa'
+      AND id_dispositivo IN (
+        SELECT id_dispositivo FROM dispositivo
+        WHERE estado_conexion = 'conectado'
+        AND ultima_conexion < NOW() - INTERVAL '1 minute'
+      )`
     );
-  }
 
+    const result = await pool.query(
+      `UPDATE dispositivo SET estado_conexion = 'desconectado'
+      WHERE ultima_conexion < NOW() - INTERVAL '1 minute'
+      AND estado_conexion = 'conectado'`
+    );
+    return result.rowCount ?? 0;
+  },
+
+  async buscarGestorPorEquipo(id_equipo: number) {
+  const result = await pool.query(
+    `SELECT * FROM dispositivo
+     WHERE tipo = 'gestor_sesiones' AND id_equipo = $1 AND activo = true
+     ORDER BY id_dispositivo DESC LIMIT 1`,
+    [id_equipo]
+  );
+  return result.rows[0] || null;
+  }
 };

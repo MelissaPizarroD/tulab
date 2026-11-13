@@ -41,16 +41,21 @@ export const EstadoLaboratorio = ({ id_turno }: { id_turno: number }) => {
   useEffect(() => {
     cargarDatos();
 
-    socket.on('sesion_iniciada', () => cargarDatos());
-    socket.on('sesion_cerrada', () => cargarDatos());
-    socket.on('entrada_registrada', () => cargarDatos());
-    socket.on('salida_registrada', () => cargarDatos());
+    const handler = () => cargarDatos();
+    const eventos = [
+      'sesion_iniciada',
+      'sesion_cerrada',
+      'entrada_registrada',
+      'salida_registrada',
+      'dispositivo_actualizado'
+    ];
+
+    eventos.forEach(e => socket.on(e, handler));
+    const intervalo = setInterval(cargarDatos, 30000);
 
     return () => {
-      socket.off('sesion_iniciada');
-      socket.off('sesion_cerrada');
-      socket.off('entrada_registrada');
-      socket.off('salida_registrada');
+      eventos.forEach(e => socket.off(e, handler));
+      clearInterval(intervalo);
     };
   }, [id_turno]);
 
