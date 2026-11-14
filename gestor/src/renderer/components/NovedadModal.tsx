@@ -9,70 +9,61 @@ type Props = {
 export const NovedadModal = ({ id_equipo, onCerrar }: Props) => {
   const [descripcion, setDescripcion] = useState('');
   const [enviando, setEnviando] = useState(false);
-  const [mensaje, setMensaje] = useState('');
+  const [exito, setExito] = useState(false);
+  const [error, setError] = useState('');
 
   const handleEnviar = async () => {
-    if (!descripcion.trim()) return;
+    if (!descripcion.trim() || enviando) return;
     setEnviando(true);
+    setError('');
     const resultado = await reportarNovedad(id_equipo, descripcion);
     if (resultado.exito) {
-      setMensaje('Novedad reportada correctamente');
+      setExito(true);
       setTimeout(onCerrar, 2000);
     } else {
-      setMensaje(resultado.mensaje || 'Error al reportar');
+      setError(resultado.mensaje || 'Error al reportar');
       setEnviando(false);
     }
   };
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0,
-      background: 'rgba(0,0,0,0.5)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 100
-    }}>
-      <div style={{
-        background: 'white', borderRadius: '12px',
-        padding: '32px', width: '400px'
-      }}>
-        <h2 style={{ marginTop: 0 }}>Reportar novedad</h2>
-        {mensaje ? (
-          <p style={{ color: '#166534' }}>{mensaje}</p>
+    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-novedad">
+      <div className="modal__caja">
+        {exito ? (
+          <div className="modal__exito" role="status">
+            <div className="resultado__icono" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12.5l5 5L20 6.5" />
+              </svg>
+            </div>
+            <h2 className="resultado__titulo" id="titulo-novedad">¡Novedad reportada!</h2>
+            <p className="resultado__texto">Gracias por avisar. El encargado de sala ya puede verla.</p>
+          </div>
         ) : (
           <>
+            <h2 className="modal__titulo" id="titulo-novedad">Reportar novedad</h2>
+            <p className="modal__texto">Cuéntanos qué pasa con este equipo.</p>
+
             <textarea
+              className="campo campo--area"
               value={descripcion}
-              onChange={e => setDescripcion(e.target.value)}
+              onChange={(e) => setDescripcion(e.target.value)}
               placeholder="Describe el problema del equipo..."
-              rows={4}
-              style={{
-                width: '100%', padding: '12px',
-                borderRadius: '8px', border: '1px solid #ccc',
-                fontSize: '16px', resize: 'none',
-                boxSizing: 'border-box'
-              }}
+              rows={5}
+              autoFocus
             />
-            <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-              <button
-                onClick={onCerrar}
-                style={{
-                  flex: 1, padding: '12px',
-                  borderRadius: '8px', border: '1px solid #ccc',
-                  background: '#f0f0f0', cursor: 'pointer', fontSize: '16px'
-                }}
-              >
+
+            {error && <p className="mensaje-error" role="alert">{error}</p>}
+
+            <div className="acciones">
+              <button type="button" className="boton boton--neutro" onClick={onCerrar}>
                 Cancelar
               </button>
               <button
+                type="button"
+                className="boton boton--primario"
                 onClick={handleEnviar}
                 disabled={enviando || !descripcion.trim()}
-                style={{
-                  flex: 1, padding: '12px',
-                  borderRadius: '8px', border: 'none',
-                  background: enviando || !descripcion.trim() ? '#ccc' : '#dc2626',
-                  color: 'white', cursor: enviando ? 'default' : 'pointer',
-                  fontSize: '16px'
-                }}
               >
                 {enviando ? 'Enviando...' : 'Reportar'}
               </button>

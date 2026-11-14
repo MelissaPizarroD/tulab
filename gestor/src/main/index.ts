@@ -7,6 +7,7 @@ import fs from 'fs';
 let limiteInactividadMin = 15;
 let ultimoAvisoInactividad = 0;
 
+
 const isDev = process.env.NODE_ENV === 'development';
 // Lee la URL del servidor desde config.json (junto al .exe).
 // Si no existe, usa API_URL del entorno o localhost.
@@ -26,6 +27,8 @@ const leerApiUrl = (): string => {
 };
 
 const API_URL = leerApiUrl();
+const icono = nativeImage.createFromPath(path.join(__dirname, '../../assets/icon.png'));
+const iconoBandeja = nativeImage.createFromPath(path.join(__dirname, '../../assets/icon-bandeja.png'));
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -68,6 +71,7 @@ const mostrarVentana = () => {
 const avisarAtajo = () => {
   if (Notification.isSupported()) {
     new Notification({
+      icon: icono,
       title: 'TuLab Gestor',
       body: 'Para volver a abrir el Gestor presiona Ctrl + Shift + G o usa la barra de tareas.'
     }).show();
@@ -86,7 +90,7 @@ const configurarInicioAutomatico = () => {
 // ---------- Tray y ventana ----------
 
 const createTray = () => {
-  tray = new Tray(nativeImage.createEmpty());
+  tray = new Tray(iconoBandeja);
   tray.setToolTip('TuLab Gestor (Ctrl + Shift + G)');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Abrir Gestor', click: mostrarVentana }
@@ -98,7 +102,8 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    minimizable: !!isDev,
+    icon: icono,
+    minimizable: true,
     maximizable: false,
     closable: false,
     resizable: false,

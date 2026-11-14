@@ -1,0 +1,425 @@
+/* ============================================
+   Layout general del gestor
+   ============================================ */
+.gestor {
+  --columna: 520px;
+  --tecla-alto: clamp(52px, 7vh, 80px);
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* espacio abajo para el aviso fijo del atajo de teclado */
+  padding: clamp(20px, 4vh, 48px) 24px 72px;
+}
+
+.gestor__columna {
+  width: 100%;
+  max-width: var(--columna);
+  display: flex;
+  flex-direction: column;
+}
+
+.gestor__logo {
+  display: block;
+  height: clamp(72px, 10vh, 120px);
+  width: auto;
+  margin: 0 auto clamp(14px, 2.5vh, 32px);
+}
+
+.gestor__titulo {
+  margin: 0;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--neutro-800);
+}
+
+.gestor__subtitulo {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 1.125rem;
+  color: var(--neutro-500);
+}
+
+.gestor__subtitulo--resultado {
+  margin: 0 0 clamp(16px, 3vh, 32px);
+}
+
+.gestor__ayuda {
+  margin: 20px 0 0;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--neutro-500);
+}
+
+.gestor__pie {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  margin: 0;
+  padding: 0 24px;
+  text-align: center;
+  font-size: 0.9375rem;
+  color: var(--neutro-500);
+}
+
+/* ============================================
+   Indicador de conexión
+   ============================================ */
+.conexion {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: var(--activa-bg);
+  color: var(--activa-fg);
+}
+
+.conexion--offline {
+  background: var(--pendiente-bg);
+  color: var(--pendiente-fg);
+}
+
+.conexion__punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ============================================
+   Botones
+   ============================================ */
+.boton {
+  width: 100%;
+  height: 64px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 18px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  transition: background-color 120ms, transform 80ms;
+}
+
+.boton--grande {
+  height: 72px;
+  margin-top: clamp(14px, 2.5vh, 28px);
+  font-size: 1.25rem;
+}
+
+.boton:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.boton--primario {
+  background: var(--dorado-500);
+  color: var(--neutro-800);
+}
+
+.boton--primario:active:not(:disabled) {
+  background: var(--dorado-600);
+}
+
+.boton--aviso {
+  background: var(--pendiente-bg);
+  color: var(--pendiente-fg);
+}
+
+.boton--aviso:active:not(:disabled) {
+  background: #F9DCC8;
+}
+
+.boton--neutro {
+  background: var(--neutro-100);
+  color: var(--neutro-600);
+}
+
+.boton--neutro:active:not(:disabled) {
+  background: var(--neutro-200);
+}
+
+.boton:disabled {
+  background: var(--neutro-200);
+  color: var(--neutro-400);
+  cursor: default;
+}
+
+.acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.acciones--columna {
+  grid-template-columns: 1fr;
+}
+
+/* ============================================
+   Campos de texto
+   ============================================ */
+.campo {
+  width: 100%;
+  border: 2px solid var(--neutro-300);
+  border-radius: 18px;
+  background: var(--neutro-0);
+  color: var(--neutro-800);
+  font: inherit;
+  font-size: 1.125rem;
+}
+
+.campo::placeholder {
+  color: var(--neutro-400);
+}
+
+.campo:focus {
+  outline: none;
+  border-color: var(--dorado-500);
+  box-shadow: 0 0 0 4px var(--dorado-100);
+}
+
+.campo--numero {
+  height: 72px;
+  padding: 0 16px;
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.campo--area {
+  padding: 14px 16px;
+  resize: none;
+  line-height: 1.4;
+}
+
+.mensaje-error {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--cancelada-bg);
+  color: var(--cancelada-fg);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* ============================================
+   Campo de código + teclado
+   ============================================ */
+.codigo__etiqueta {
+  display: block;
+  margin: clamp(14px, 2.5vh, 28px) 0 8px;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--neutro-600);
+}
+
+.codigo__valor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(64px, 8vh, 88px);
+  padding: 0 16px;
+  border: 2px solid var(--neutro-300);
+  border-radius: 18px;
+  background: var(--neutro-0);
+  color: var(--neutro-800);
+  font-size: 2.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.25em;
+  text-indent: 0.25em;
+  overflow: hidden;
+}
+
+.teclado {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: clamp(12px, 2vh, 20px);
+}
+
+.tecla {
+  height: var(--tecla-alto);
+  border: 2px solid var(--neutro-200);
+  border-radius: 18px;
+  background: var(--neutro-0);
+  color: var(--neutro-700);
+  font-size: 2rem;
+  font-weight: 400;
+  transition: transform 80ms, background-color 80ms, border-color 80ms;
+}
+
+.tecla:active:not(:disabled) {
+  transform: scale(0.97);
+  background: var(--dorado-50);
+  border-color: var(--dorado-300);
+}
+
+.tecla--accion {
+  border-color: transparent;
+  background: var(--neutro-100);
+  color: var(--neutro-500);
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.tecla--accion:active:not(:disabled) {
+  background: var(--neutro-200);
+  border-color: transparent;
+}
+
+.tecla:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ============================================
+   Panel (equipo sin configurar / sesión activa)
+   ============================================ */
+.panel {
+  margin-top: 28px;
+  padding: 32px;
+  border: 2px solid var(--neutro-200);
+  border-radius: 28px;
+  background: var(--neutro-0);
+  text-align: center;
+}
+
+.panel__texto {
+  margin: 16px 0 0;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  color: var(--neutro-600);
+}
+
+.estado-sesion {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: var(--activa-bg);
+  color: var(--activa-fg);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* ============================================
+   Resultado (éxito / error)
+   ============================================ */
+.resultado {
+  --resultado-bg: var(--activa-bg);
+  --resultado-fg: var(--activa-fg);
+
+  padding: clamp(28px, 5vh, 56px) 32px;
+  border: 2px solid var(--neutro-200);
+  border-radius: 28px;
+  background: var(--neutro-0);
+  text-align: center;
+}
+
+.resultado--error {
+  --resultado-bg: var(--cancelada-bg);
+  --resultado-fg: var(--cancelada-fg);
+}
+
+.resultado__icono {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  background: var(--resultado-bg, var(--activa-bg));
+  color: var(--resultado-fg, var(--activa-fg));
+  animation: aparecer 220ms ease-out;
+}
+
+.resultado__icono svg {
+  width: 52px;
+  height: 52px;
+}
+
+.resultado__titulo {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--resultado-fg, var(--activa-fg));
+}
+
+.resultado__texto {
+  margin: 14px 0 0;
+  font-size: 1.375rem;
+  line-height: 1.4;
+  color: var(--neutro-600);
+}
+
+@keyframes aparecer {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   Modal de novedad
+   ============================================ */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 10, 10, 0.5);
+}
+
+.modal__caja {
+  width: 100%;
+  max-width: 520px;
+  padding: 32px;
+  border-radius: 28px;
+  background: var(--neutro-0);
+}
+
+.modal__titulo {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--neutro-800);
+}
+
+.modal__texto {
+  margin: 6px 0 20px;
+  font-size: 1.0625rem;
+  color: var(--neutro-500);
+}
+
+.modal__exito {
+  text-align: center;
+  padding: 16px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resultado__icono {
+    animation: none;
+  }
+  .tecla,
+  .boton {
+    transition: none;
+  }
+}

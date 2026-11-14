@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { TecladoNumerico } from '../components/TecladoNumerico';
 import { NovedadModal } from '../components/NovedadModal';
+import { IndicadorConexion } from '../components/IndicadorConexion';
+import { ResultadoOperacion } from '../components/ResultadoOperacion';
 import { iniciarSesion, cerrarSesion } from '../services/sesionService';
 import { obtenerConfiguracion } from '../services/configuracionService';
 import { useConexion } from '../hooks/useConexion';
 import { api, urlServidor } from '../services/api';
 import { getDB } from '../db/database';
+import logo from '../assets/tulab_logo.svg';
+import '../styles/gestor.css';
 
 declare global {
   interface Window {
@@ -22,19 +26,33 @@ declare global {
 }
 
 type EstadoSesion = 'sin_sesion' | 'con_sesion';
-type EstadoOperacion = 'idle' | 'cargando' | 'exito' | 'error';
+
+type Resultado = {
+  tipo: 'exito' | 'error';
+  titulo: string;
+  mensaje: string;
+};
+
+const MS_EXITO = 3000;
+const MS_ERROR = 4500;
+const PIE_ERROR = 'Si el problema continúa, contacta al encargado de sala.';
 
 export const GestorPage = () => {
   const [codigo, setCodigo] = useState('');
   const [estadoSesion, setEstadoSesion] = useState<EstadoSesion>('sin_sesion');
-  const [estadoOperacion, setEstadoOperacion] = useState<EstadoOperacion>('idle');
-  const [mensaje, setMensaje] = useState('');
+  const [cargando, setCargando] = useState(false);
+  const [resultado, setResultado] = useState<Resultado | null>(null);
   const [mostrarNovedad, setMostrarNovedad] = useState(false);
   const [tiempoInactividad, setTiempoInactividad] = useState(15);
   const [idEquipo, setIdEquipo] = useState<number | null>(null);
   const [idDispositivo, setIdDispositivo] = useState<number | null>(null);
   const { conectado } = useConexion();
   const [numeroEquipo, setNumeroEquipo] = useState<number | null>(null);
+
+  // Configuración inicial del equipo
+  const [numeroInput, setNumeroInput] = useState('');
+  const [configurando, setConfigurando] = useState(false);
+  const [errorConfig, setErrorConfig] = useState('');
 
   useEffect(() => {
     if (!idDispositivo) return;
@@ -96,205 +114,204 @@ export const GestorPage = () => {
     return () => clearTimeout(t);
   }, [estadoSesion]);
 
+  // Oculta la tarjeta de resultado pasados unos segundos
+  useEffect(() => {
+    if (!resultado) return;
+    const t = setTimeout(
+      () => setResultado(null),
+      resultado.tipo === 'exito' ? MS_EXITO : MS_ERROR
+    );
+    return () => clearTimeout(t);
+  }, [resultado]);
+
+  const handleConfigurar = async () => {
+    const numero = Number(numeroInput);
+    if (!numero || configurando) return;
+    setConfigurando(true);
+    setErrorConfig('');
+    try {
+      const response = await api.post('/api/dispositivos/registrar', {
+        tipo: 'gestor_sesiones',
+        nombre: `Gestor PC-${numero}`,
+        numero_equipo: numero
+      });
+      const idEq = response.data.id_equipo;
+      const idDisp = response.data.id_dispositivo;
+      const db = await getDB();
+      await db.put('configuracion', { clave: 'id_equipo', valor: String(idEq) });
+      await db.put('configuracion', { clave: 'numero_equipo', valor: String(numero) });
+      await db.put('configuracion', { clave: 'id_dispositivo', valor: String(idDisp) });
+      setIdEquipo(idEq);
+      setNumeroEquipo(numero);
+      setIdDispositivo(idDisp);
+      window.electron?.setIdEquipo(idEq);
+    } catch (error: any) {
+      setErrorConfig(error.response?.data?.mensaje || 'Error al configurar el equipo');
+    } finally {
+      setConfigurando(false);
+    }
+  };
+
   const handleIniciarSesion = async () => {
-    if (!codigo || !idEquipo || !idDispositivo) return;
-    setEstadoOperacion('cargando');
+    if (!codigo || !idEquipo || !idDispositivo || cargando) return;
+    setCargando(true);
 
-    const resultado = await iniciarSesion(codigo, idEquipo, idDispositivo);
+    const respuesta = await iniciarSesion(codigo, idEquipo, idDispositivo);
 
-    if (resultado.exito) {
+    if (respuesta.exito) {
       setEstadoSesion('con_sesion');
-      if (idEquipo) window.electron.notificarSesionIniciada(idEquipo);
-      setEstadoOperacion('exito');
-      setMensaje(resultado.offline
-        ? 'Sesión iniciada localmente'
-        : '¡Sesión iniciada!'
-      );
+      window.electron?.notificarSesionIniciada(idEquipo);
+      setResultado({
+        tipo: 'exito',
+        titulo: '¡Sesión iniciada!',
+        mensaje: respuesta.offline
+          ? 'Tu sesión se guardó en este equipo y se enviará cuando haya conexión.'
+          : 'Ya puedes usar el equipo.'
+      });
     } else {
-      setEstadoOperacion('error');
-      setMensaje(resultado.mensaje || 'Error al iniciar sesión');
+      setResultado({
+        tipo: 'error',
+        titulo: 'No se pudo iniciar sesión',
+        mensaje: respuesta.mensaje || 'No pudimos iniciar tu sesión. Inténtalo de nuevo.'
+      });
     }
 
     setCodigo('');
-    setTimeout(() => {
-      setEstadoOperacion('idle');
-      setMensaje('');
-    }, 3000);
+    setCargando(false);
   };
 
   const handleCerrarSesion = async (motivo: string = 'manual') => {
     if (!idEquipo) return;
-    setEstadoOperacion('cargando');
-    const resultado = await cerrarSesion(idEquipo, motivo);
+    setCargando(true);
+    const respuesta = await cerrarSesion(idEquipo, motivo);
 
-    if (resultado.exito) {
+    if (respuesta.exito) {
       setEstadoSesion('sin_sesion');
-      setEstadoOperacion('exito');
-      setMensaje(motivo === 'inactividad'
-        ? 'Sesión cerrada por inactividad'
-        : '¡Sesión cerrada!'
-      );
+      setResultado({
+        tipo: 'exito',
+        titulo: '¡Sesión cerrada!',
+        mensaje: motivo === 'inactividad'
+          ? 'Tu sesión se cerró por inactividad.'
+          : 'Gracias por usar el laboratorio.'
+      });
     } else {
-      setEstadoOperacion('error');
-      setMensaje(resultado.mensaje || 'Error al cerrar sesión');
+      setResultado({
+        tipo: 'error',
+        titulo: 'No se pudo cerrar la sesión',
+        mensaje: respuesta.mensaje || 'No pudimos cerrar tu sesión. Inténtalo de nuevo.'
+      });
     }
-
-    setTimeout(() => {
-      setEstadoOperacion('idle');
-      setMensaje('');
-    }, 3000);
+    setCargando(false);
   };
 
+  // ---------- Equipo sin configurar ----------
   if (!idEquipo) {
     return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        background: '#f8fafc', gap: '16px'
-      }}>
-        <p style={{ color: '#64748b', fontSize: '18px' }}>
-          Equipo no configurado
-        </p>
-        <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-          Ingresa el número de equipo para configurar este PC
-        </p>
-        <input
-          type="number"
-          placeholder="Número de equipo (ej: 1)"
-          style={{
-            padding: '12px 16px', fontSize: '16px',
-            borderRadius: '8px', border: '1px solid #ccc',
-            width: '240px', textAlign: 'center'
-          }}
-          id="input-equipo"
-        />
-        <button
-          onClick={async () => {
-            const input = document.getElementById('input-equipo') as HTMLInputElement;
-            const numero = Number(input.value);
-            if (!numero) return;
-            try {
-              const response = await api.post('/api/dispositivos/registrar', {
-                tipo: 'gestor_sesiones',
-                nombre: `Gestor PC-${numero}`,
-                numero_equipo: numero
-              });
-              const idEq = response.data.id_equipo;
-              const idDisp = response.data.id_dispositivo;
-              const db = await getDB();
-              await db.put('configuracion', { clave: 'id_equipo', valor: String(idEq) });
-              await db.put('configuracion', { clave: 'numero_equipo', valor: String(numero) });
-              await db.put('configuracion', { clave: 'id_dispositivo', valor: String(idDisp) });
-              setIdEquipo(idEq);
-              setNumeroEquipo(numero);
-              setIdDispositivo(idDisp);
-              window.electron.setIdEquipo(idEq);
-            } catch (error: any) {
-              alert(error.response?.data?.mensaje || 'Error al configurar el equipo');
-            }
-          }}
-          style={{
-            padding: '12px 32px', fontSize: '16px',
-            borderRadius: '8px', border: 'none',
-            background: '#2563eb', color: 'white',
-            cursor: 'pointer', fontWeight: 'bold'
-          }}
-        >
-          Configurar
-        </button>
-      </div>
+      <main className="gestor">
+        <IndicadorConexion conectado={conectado} detalle={urlServidor} />
+        <div className="gestor__columna">
+          <img className="gestor__logo" src={logo} alt="TuLab" />
+          <h1 className="gestor__titulo">Equipo no configurado</h1>
+          <p className="gestor__subtitulo">
+            Ingresa el número de equipo para configurar este PC.
+          </p>
+
+          <form
+            className="panel"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleConfigurar();
+            }}
+          >
+            <input
+              className="campo campo--numero"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              placeholder="Número de equipo (ej: 1)"
+              aria-label="Número de equipo"
+              value={numeroInput}
+              onChange={(e) => setNumeroInput(e.target.value)}
+              autoFocus
+            />
+            {errorConfig && <p className="mensaje-error" role="alert">{errorConfig}</p>}
+            <button
+              type="submit"
+              className="boton boton--primario boton--grande"
+              disabled={configurando || !Number(numeroInput)}
+            >
+              {configurando ? 'Configurando...' : 'Configurar'}
+            </button>
+          </form>
+        </div>
+      </main>
     );
   }
 
+  // ---------- Pantalla principal ----------
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#f8fafc',
-      padding: '24px'
-    }}>
-      <div style={{
-        position: 'fixed', top: '16px', right: '16px',
-        padding: '6px 12px', borderRadius: '20px',
-        background: conectado ? '#dcfce7' : '#fee2e2',
-        color: conectado ? '#166534' : '#991b1b',
-        fontSize: '14px', fontWeight: 'bold'
-      }}>
-        {conectado ? 'En línea' : `Sin conexión (${urlServidor})`}
-      </div>
+    <main className="gestor">
+      <IndicadorConexion conectado={conectado} detalle={urlServidor} />
 
-      <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '8px', color: '#1e293b' }}>
-        Equipo {numeroEquipo ?? idEquipo}
-      </h1>
+      <div className="gestor__columna">
+        <img className="gestor__logo" src={logo} alt="TuLab" />
 
-      {estadoSesion === 'sin_sesion' ? (
-        <>
-          <p style={{ color: '#64748b', marginBottom: '32px' }}>
-            Ingresa tu código para iniciar sesión
-          </p>
-          {estadoOperacion === 'idle' || estadoOperacion === 'cargando' ? (
+        {resultado ? (
+          <ResultadoOperacion
+            tipo={resultado.tipo}
+            titulo={resultado.titulo}
+            mensaje={resultado.mensaje}
+            pie={resultado.tipo === 'error' ? PIE_ERROR : undefined}
+            onCerrar={() => setResultado(null)}
+          />
+        ) : estadoSesion === 'sin_sesion' ? (
+          <>
+            <h1 className="gestor__titulo">Equipo {numeroEquipo ?? idEquipo}</h1>
+            <p className="gestor__subtitulo">Ingresa tu código para iniciar sesión.</p>
+
             <TecladoNumerico
               valor={codigo}
               onChange={setCodigo}
               onConfirmar={handleIniciarSesion}
               onLimpiar={() => setCodigo('')}
-              disabled={estadoOperacion === 'cargando'}
+              disabled={cargando}
             />
-          ) : (
-            <div style={{
-              padding: '32px 48px', borderRadius: '12px',
-              background: estadoOperacion === 'exito' ? '#dcfce7' : '#fee2e2',
-              color: estadoOperacion === 'exito' ? '#166534' : '#991b1b',
-              fontSize: '20px', fontWeight: 'bold', textAlign: 'center'
-            }}>
-              {estadoOperacion === 'exito' ? '✓' : '✗'} {mensaje}
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <p style={{ color: '#166534', fontSize: '20px', marginBottom: '32px' }}>
-            Sesión activa
-          </p>
-          {mensaje && (
-            <div style={{
-              padding: '16px 32px', borderRadius: '8px', marginBottom: '24px',
-              background: estadoOperacion === 'exito' ? '#dcfce7' : '#fee2e2',
-              color: estadoOperacion === 'exito' ? '#166534' : '#991b1b',
-              fontWeight: 'bold'
-            }}>
-              {mensaje}
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <button
-              onClick={() => setMostrarNovedad(true)}
-              style={{
-                padding: '16px 32px', fontSize: '16px',
-                borderRadius: '8px', border: 'none',
-                background: '#f59e0b', color: 'white',
-                cursor: 'pointer', fontWeight: 'bold'
-              }}
-            >
-              Reportar novedad
-            </button>
-            <button
-              onClick={() => handleCerrarSesion('manual')}
-              style={{
-                padding: '16px 32px', fontSize: '16px',
-                borderRadius: '8px', border: 'none',
-                background: '#dc2626', color: 'white',
-                cursor: 'pointer', fontWeight: 'bold'
-              }}
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </>
-      )}
+          </>
+        ) : (
+          <>
+            <h1 className="gestor__titulo">Equipo {numeroEquipo ?? idEquipo}</h1>
+
+            <section className="panel">
+              <span className="estado-sesion">
+                <span className="conexion__punto" aria-hidden="true" />
+                Sesión activa
+              </span>
+              <p className="panel__texto">
+                Puedes seguir trabajando. Si notas un problema con el equipo, repórtalo.
+              </p>
+
+              <div className="acciones acciones--columna">
+                <button
+                  type="button"
+                  className="boton boton--aviso"
+                  onClick={() => setMostrarNovedad(true)}
+                  disabled={cargando}
+                >
+                  Reportar novedad
+                </button>
+                <button
+                  type="button"
+                  className="boton boton--primario"
+                  onClick={() => handleCerrarSesion('manual')}
+                  disabled={cargando}
+                >
+                  {cargando ? 'Cerrando...' : 'Cerrar sesión'}
+                </button>
+              </div>
+            </section>
+          </>
+        )}
+      </div>
 
       {mostrarNovedad && idEquipo && (
         <NovedadModal
@@ -304,13 +321,10 @@ export const GestorPage = () => {
       )}
 
       {estadoSesion === 'con_sesion' && (
-        <p style={{
-          position: 'fixed', bottom: '16px', left: 0, right: 0,
-          textAlign: 'center', color: '#94a3b8', fontSize: '13px', margin: 0
-        }}>
+        <p className="gestor__pie">
           Puedes minimizar esta ventana y seguir trabajando. Para volver a abrirla presiona Ctrl + Shift + G
         </p>
       )}
-    </div>
+    </main>
   );
 };
