@@ -1,0 +1,298 @@
+/* ============================================
+   Layout general de la terminal
+   ============================================ */
+.terminal {
+  --columna: 520px;
+  --tecla-alto: clamp(60px, 7vh, 92px);
+
+  /* Color de acento según el flujo: entrada = dorado, salida = azul (estado "Programada") */
+  --acento: var(--dorado-500);
+  --acento-presionado: var(--dorado-600);
+  --acento-texto: var(--neutro-800);
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(24px, 5vh, 64px) 24px 32px;
+}
+
+.terminal[data-modo='salida'] {
+  --acento: var(--programada-fg);
+  --acento-presionado: #174C8C;
+  --acento-texto: var(--neutro-0);
+}
+
+.terminal__columna {
+  width: 100%;
+  max-width: var(--columna);
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal__logo {
+  display: block;
+  height: clamp(88px, 11vh, 130px);
+  width: auto;
+  margin: 0 auto clamp(20px, 3.5vh, 40px);
+}
+
+.terminal__titulo {
+  margin: 0;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--neutro-800);
+}
+
+.terminal__subtitulo {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 1.125rem;
+  color: var(--neutro-500);
+}
+
+.terminal__subtitulo--resultado {
+  margin: 0 0 clamp(20px, 3vh, 32px);
+}
+
+/* ============================================
+   Indicador de conexión
+   ============================================ */
+.conexion {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: var(--activa-bg);
+  color: var(--activa-fg);
+}
+
+.conexion--offline {
+  background: var(--pendiente-bg);
+  color: var(--pendiente-fg);
+}
+
+.conexion__punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ============================================
+   Selector entrada / salida
+   ============================================ */
+.modo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: clamp(20px, 3.5vh, 36px);
+}
+
+.modo__opcion {
+  min-height: 64px;
+  padding: 0 12px;
+  border: 2px solid var(--neutro-200);
+  border-radius: 16px;
+  background: var(--neutro-0);
+  color: var(--neutro-600);
+  font-size: 1.125rem;
+  font-weight: 500;
+  transition: background-color 120ms, border-color 120ms, color 120ms;
+}
+
+.modo__opcion[aria-checked='true'] {
+  font-weight: 600;
+  border-color: var(--dorado-500);
+  background: var(--dorado-50);
+  color: var(--dorado-800);
+}
+
+.modo__opcion--salida[aria-checked='true'] {
+  border-color: var(--programada-fg);
+  background: var(--programada-bg);
+  color: var(--programada-fg);
+}
+
+/* ============================================
+   Campo de código + teclado
+   ============================================ */
+.codigo__etiqueta {
+  display: block;
+  margin: clamp(20px, 3.5vh, 32px) 0 10px;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--neutro-600);
+}
+
+.codigo__valor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(72px, 8vh, 96px);
+  padding: 0 16px;
+  border: 2px solid var(--neutro-300);
+  border-radius: 18px;
+  background: var(--neutro-0);
+  color: var(--neutro-800);
+  font-size: 2.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.25em;
+  /* compensa el espacio que deja letter-spacing después del último dígito */
+  text-indent: 0.25em;
+  overflow: hidden;
+}
+
+.teclado {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: clamp(14px, 2.5vh, 24px);
+}
+
+.tecla {
+  height: var(--tecla-alto);
+  border: 2px solid var(--neutro-200);
+  border-radius: 18px;
+  background: var(--neutro-0);
+  color: var(--neutro-700);
+  font-size: 2.25rem;
+  font-weight: 400;
+  transition: transform 80ms, background-color 80ms, border-color 80ms;
+}
+
+.tecla:active:not(:disabled) {
+  transform: scale(0.97);
+  background: var(--dorado-50);
+  border-color: var(--dorado-300);
+}
+
+.tecla--accion {
+  border-color: transparent;
+  background: var(--neutro-100);
+  color: var(--neutro-500);
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.tecla--accion:active:not(:disabled) {
+  background: var(--neutro-200);
+  border-color: transparent;
+}
+
+.tecla:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.registrar {
+  width: 100%;
+  height: 72px;
+  margin-top: clamp(16px, 3vh, 28px);
+  border: 0;
+  border-radius: 18px;
+  background: var(--acento);
+  color: var(--acento-texto);
+  font-size: 1.25rem;
+  font-weight: 600;
+  transition: background-color 120ms, transform 80ms;
+}
+
+.registrar:active:not(:disabled) {
+  background: var(--acento-presionado);
+  transform: scale(0.99);
+}
+
+.registrar:disabled {
+  background: var(--neutro-200);
+  color: var(--neutro-400);
+  cursor: default;
+}
+
+.terminal__ayuda {
+  margin: 20px 0 0;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--neutro-500);
+}
+
+/* ============================================
+   Resultado del registro (éxito / error)
+   ============================================ */
+.resultado {
+  --resultado-bg: var(--activa-bg);
+  --resultado-fg: var(--activa-fg);
+
+  padding: clamp(32px, 5vh, 56px) 32px;
+  border: 2px solid var(--neutro-200);
+  border-radius: 28px;
+  background: var(--neutro-0);
+  text-align: center;
+}
+
+.resultado--error {
+  --resultado-bg: var(--cancelada-bg);
+  --resultado-fg: var(--cancelada-fg);
+}
+
+.resultado__icono {
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+  margin: 0 auto 28px;
+  border-radius: 50%;
+  background: var(--resultado-bg);
+  color: var(--resultado-fg);
+  animation: aparecer 220ms ease-out;
+}
+
+.resultado__icono svg {
+  width: 56px;
+  height: 56px;
+}
+
+.resultado__titulo {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--resultado-fg);
+}
+
+.resultado__texto {
+  margin: 14px 0 0;
+  font-size: 1.375rem;
+  line-height: 1.4;
+  color: var(--neutro-600);
+}
+
+@keyframes aparecer {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resultado__icono {
+    animation: none;
+  }
+  .tecla,
+  .registrar {
+    transition: none;
+  }
+}

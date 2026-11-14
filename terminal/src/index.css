@@ -1,0 +1,84 @@
+/* ============================================
+   Tokens de diseño TuLab
+   ============================================ */
+:root {
+  /* Dorado (marca) */
+  --dorado-50: #FFF8E6;
+  --dorado-100: #FCEFC7;
+  --dorado-200: #F8DD8A;
+  --dorado-300: #F0C64A;
+  --dorado-400: #E3AE1A;
+  --dorado-500: #D49901; /* primario */
+  --dorado-600: #B07F01;
+  --dorado-700: #8F6700;
+  --dorado-800: #6E4F04;
+  --dorado-900: #4A3505;
+
+  /* Neutros */
+  --neutro-0: #FFFFFF;
+  --neutro-50: #FAFAF7;
+  --neutro-100: #F3F2EE;
+  --neutro-200: #E4E2DC;
+  --neutro-300: #CFCCC4;
+  --neutro-400: #9C988F;
+  --neutro-500: #6B6860;
+  --neutro-600: #3D3B36;
+  --neutro-700: #1A1A1A;
+  --neutro-800: #0A0A0A;
+
+  /* Estados (fondo / texto) */
+  --activa-bg: #E7F5EC;
+  --activa-fg: #1F7A45;
+  --programada-bg: #E6EFFA;
+  --programada-fg: #1E5FAD;
+  --pendiente-bg: #FDEDE3;
+  --pendiente-fg: #B4430C;
+  --cancelada-bg: #FBE9E9;
+  --cancelada-fg: #B42323;
+  --finalizada-bg: #F3F2EE;
+  --finalizada-fg: #3D3B36;
+
+  /* Tipografía */
+  --fuente: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================
+   Base
+   ============================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--neutro-50);
+  color: var(--neutro-600);
+  font-family: var(--fuente);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  /* Es una terminal táctil: sin selección de texto ni zoom por doble toque */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 3px solid var(--dorado-300);
+  outline-offset: 2px;
+}
