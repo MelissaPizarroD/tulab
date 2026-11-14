@@ -4,15 +4,19 @@ import { NovedadModal } from '../components/NovedadModal';
 import { iniciarSesion, cerrarSesion } from '../services/sesionService';
 import { obtenerConfiguracion } from '../services/configuracionService';
 import { useConexion } from '../hooks/useConexion';
-import { api } from '../services/api';
+import { api, urlServidor } from '../services/api';
 import { getDB } from '../db/database';
 
 declare global {
   interface Window {
     electron: {
       platform: string;
+      apiUrl: string;
       setIdEquipo: (id: number) => void;
       notificarSesionIniciada: (id: number) => void;
+      estadoSesion: (activa: boolean) => void;
+      setTiempoInactividad: (minutos: number) => void;
+      onInactividad: (callback: () => void) => () => void;
     }
   }
 }
@@ -27,7 +31,6 @@ export const GestorPage = () => {
   const [mensaje, setMensaje] = useState('');
   const [mostrarNovedad, setMostrarNovedad] = useState(false);
   const [tiempoInactividad, setTiempoInactividad] = useState(15);
-  const [ultimaActividad, setUltimaActividad] = useState(Date.now());
   const [idEquipo, setIdEquipo] = useState<number | null>(null);
   const [idDispositivo, setIdDispositivo] = useState<number | null>(null);
   const { conectado } = useConexion();
@@ -60,6 +63,7 @@ export const GestorPage = () => {
     };
     cargarDispositivo();
   }, []);
+
   useEffect(() => {
     const cargarConfig = async () => {
       const tiempo = await obtenerConfiguracion('tiempo_inactividad_minutos');
@@ -68,26 +72,29 @@ export const GestorPage = () => {
     cargarConfig();
   }, []);
 
+  // Inactividad: el proceso principal mide el uso de todo el sistema y avisa aquí
   useEffect(() => {
     if (estadoSesion !== 'con_sesion') return;
 
-    const handleActividad = () => setUltimaActividad(Date.now());
-    window.addEventListener('mousemove', handleActividad);
-    window.addEventListener('keydown', handleActividad);
-
-    const intervalo = setInterval(async () => {
-      const minutosSinActividad = (Date.now() - ultimaActividad) / 60000;
-      if (minutosSinActividad >= tiempoInactividad && idEquipo) {
-        await handleCerrarSesion('inactividad');
-      }
-    }, 30000);
+    window.electron?.setTiempoInactividad(tiempoInactividad);
+    const quitarEscucha = window.electron?.onInactividad(() => {
+      handleCerrarSesion('inactividad');
+    });
 
     return () => {
-      window.removeEventListener('mousemove', handleActividad);
-      window.removeEventListener('keydown', handleActividad);
-      clearInterval(intervalo);
+      quitarEscucha?.();
     };
-  }, [estadoSesion, ultimaActividad, tiempoInactividad, idEquipo]);
+  }, [estadoSesion, tiempoInactividad, idEquipo]);
+
+  // Avisa al proceso principal para bloquear o minimizar la ventana
+  useEffect(() => {
+    const activa = estadoSesion === 'con_sesion';
+    // Con sesión espera 1,5 s para que el estudiante alcance a ver el mensaje de éxito
+    const t = setTimeout(() => {
+      window.electron?.estadoSesion(activa);
+    }, activa ? 1500 : 0);
+    return () => clearTimeout(t);
+  }, [estadoSesion]);
 
   const handleIniciarSesion = async () => {
     if (!codigo || !idEquipo || !idDispositivo) return;
@@ -103,7 +110,6 @@ export const GestorPage = () => {
         ? 'Sesión iniciada localmente'
         : '¡Sesión iniciada!'
       );
-      setUltimaActividad(Date.now());
     } else {
       setEstadoOperacion('error');
       setMensaje(resultado.mensaje || 'Error al iniciar sesión');
@@ -140,65 +146,65 @@ export const GestorPage = () => {
   };
 
   if (!idEquipo) {
-  return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      background: '#f8fafc', gap: '16px'
-    }}>
-      <p style={{ color: '#64748b', fontSize: '18px' }}>
-        Equipo no configurado
-      </p>
-      <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-        Ingresa el número de equipo para configurar este PC
-      </p>
-      <input
-        type="number"
-        placeholder="Número de equipo (ej: 1)"
-        style={{
-          padding: '12px 16px', fontSize: '16px',
-          borderRadius: '8px', border: '1px solid #ccc',
-          width: '240px', textAlign: 'center'
-        }}
-        id="input-equipo"
-      />
-      <button
-        onClick={async () => {
-          const input = document.getElementById('input-equipo') as HTMLInputElement;
-          const numero = Number(input.value);
-          if (!numero) return;
-          try {
-            const response = await api.post('/api/dispositivos/registrar', {
-              tipo: 'gestor_sesiones',
-              nombre: `Gestor PC-${numero}`,
-              numero_equipo: numero
-            });
-            const idEq = response.data.id_equipo;
-            const idDisp = response.data.id_dispositivo;
-            const db = await getDB();
-            await db.put('configuracion', { clave: 'id_equipo', valor: String(idEq) });
-            await db.put('configuracion', { clave: 'numero_equipo', valor: String(numero) });
-            await db.put('configuracion', { clave: 'id_dispositivo', valor: String(idDisp) });
-            setIdEquipo(idEq);
-            setNumeroEquipo(numero);
-            setIdDispositivo(idDisp);
-            window.electron.setIdEquipo(idEq);
-          } catch (error: any) {
-            alert(error.response?.data?.mensaje || 'Error al configurar el equipo');
-          }
-        }}
-        style={{
-          padding: '12px 32px', fontSize: '16px',
-          borderRadius: '8px', border: 'none',
-          background: '#2563eb', color: 'white',
-          cursor: 'pointer', fontWeight: 'bold'
-        }}
-      >
-        Configurar
-      </button>
-    </div>
-  );
-}
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        background: '#f8fafc', gap: '16px'
+      }}>
+        <p style={{ color: '#64748b', fontSize: '18px' }}>
+          Equipo no configurado
+        </p>
+        <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+          Ingresa el número de equipo para configurar este PC
+        </p>
+        <input
+          type="number"
+          placeholder="Número de equipo (ej: 1)"
+          style={{
+            padding: '12px 16px', fontSize: '16px',
+            borderRadius: '8px', border: '1px solid #ccc',
+            width: '240px', textAlign: 'center'
+          }}
+          id="input-equipo"
+        />
+        <button
+          onClick={async () => {
+            const input = document.getElementById('input-equipo') as HTMLInputElement;
+            const numero = Number(input.value);
+            if (!numero) return;
+            try {
+              const response = await api.post('/api/dispositivos/registrar', {
+                tipo: 'gestor_sesiones',
+                nombre: `Gestor PC-${numero}`,
+                numero_equipo: numero
+              });
+              const idEq = response.data.id_equipo;
+              const idDisp = response.data.id_dispositivo;
+              const db = await getDB();
+              await db.put('configuracion', { clave: 'id_equipo', valor: String(idEq) });
+              await db.put('configuracion', { clave: 'numero_equipo', valor: String(numero) });
+              await db.put('configuracion', { clave: 'id_dispositivo', valor: String(idDisp) });
+              setIdEquipo(idEq);
+              setNumeroEquipo(numero);
+              setIdDispositivo(idDisp);
+              window.electron.setIdEquipo(idEq);
+            } catch (error: any) {
+              alert(error.response?.data?.mensaje || 'Error al configurar el equipo');
+            }
+          }}
+          style={{
+            padding: '12px 32px', fontSize: '16px',
+            borderRadius: '8px', border: 'none',
+            background: '#2563eb', color: 'white',
+            cursor: 'pointer', fontWeight: 'bold'
+          }}
+        >
+          Configurar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -217,7 +223,7 @@ export const GestorPage = () => {
         color: conectado ? '#166534' : '#991b1b',
         fontSize: '14px', fontWeight: 'bold'
       }}>
-        {conectado ? 'En línea' : 'Sin conexión'}
+        {conectado ? 'En línea' : `Sin conexión (${urlServidor})`}
       </div>
 
       <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '8px', color: '#1e293b' }}>
@@ -297,12 +303,14 @@ export const GestorPage = () => {
         />
       )}
 
-      <p style={{
-        position: 'fixed', bottom: '16px', left: 0, right: 0,
-        textAlign: 'center', color: '#94a3b8', fontSize: '13px', margin: 0
-      }}>
-        Puedes minimizar esta ventana y seguir trabajando. Para volver a abrirla presiona Ctrl + Shift + G
-      </p>
+      {estadoSesion === 'con_sesion' && (
+        <p style={{
+          position: 'fixed', bottom: '16px', left: 0, right: 0,
+          textAlign: 'center', color: '#94a3b8', fontSize: '13px', margin: 0
+        }}>
+          Puedes minimizar esta ventana y seguir trabajando. Para volver a abrirla presiona Ctrl + Shift + G
+        </p>
+      )}
     </div>
   );
 };

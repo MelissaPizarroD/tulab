@@ -41,6 +41,9 @@
     "nsis": {
       "oneClick": true,
       "perMachine": true
-    }
+    },
+    "extraFiles": [
+      { "from": "config/config.json", "to": "config.json" }
+    ]
   }
 }
