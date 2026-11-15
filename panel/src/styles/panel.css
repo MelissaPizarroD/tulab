@@ -225,3 +225,29 @@ textarea.entrada { resize: vertical; }
 .modal__valor { font-size: 26px; font-weight: 700; color: var(--neutro-800); line-height: 1.1; }
 .modal__etiqueta { font-size: 12px; color: var(--neutro-500); }
 .modal__acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+/* ===== Configuración ===== */
+.pagina--angosta { max-width: 900px; }
+.pestanas { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 20px; background: var(--neutro-100); border-radius: 12px; }
+.pestana { border: 0; background: none; padding: 8px 18px; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 500; color: var(--neutro-600); cursor: pointer; }
+.pestana:hover { color: var(--neutro-800); }
+.pestana--activa, .pestana--activa:hover { background: var(--neutro-0); color: var(--neutro-800); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+
+.parametro { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 14px 16px; border: 1px solid var(--neutro-200); border-radius: 12px; }
+.parametro__texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 220px; }
+.parametro__nombre { font-size: 14px; font-weight: 600; color: var(--neutro-800); }
+.parametro__detalle { font-size: 12px; color: var(--neutro-500); }
+.parametro__control { display: flex; align-items: center; gap: 10px; }
+.parametro__aviso { font-size: 13px; margin: 0; }
+.parametro__aviso--ok { color: var(--activa-fg); font-weight: 600; }
+.entrada--numero { width: 84px; text-align: center; }
+.entrada--numero-largo { width: 180px; flex: none !important; }
+
+.interruptor { position: relative; width: 44px; height: 26px; border: 0; border-radius: 999px; background: var(--neutro-300); padding: 0; cursor: pointer; transition: background .15s ease; }
+.interruptor--activo { background: var(--dorado-500); }
+.interruptor__bola { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform .15s ease; }
+.interruptor--activo .interruptor__bola { transform: translateX(18px); }
+
+.fila-formulario--sin-margen { margin-bottom: 0; }
+.error-texto--arriba { margin-top: 10px; }
+.elemento--centrado { align-items: center; }

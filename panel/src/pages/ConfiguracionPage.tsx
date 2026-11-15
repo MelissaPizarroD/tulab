@@ -16,14 +16,36 @@ interface Equipo {
   descripcion: string;
 }
 
+type Pestana = 'sistema' | 'equipos';
+
+const ETIQUETAS: Record<string, string> = {
+  terminal_activa: 'Terminal activa',
+  gestor_sesiones_activo: 'Gestor de sesiones activo',
+  tiempo_inactividad_minutos: 'Tiempo de inactividad (minutos)',
+  intervalo_heartbeat_segundos: 'Intervalo de heartbeat (segundos)'
+};
+
+const ESTADOS_EQUIPO: Record<string, { texto: string; clase: string }> = {
+  disponible: { texto: 'Disponible', clase: 'insignia--activa' },
+  en_uso: { texto: 'En uso', clase: 'insignia--pendiente' },
+  fuera_de_servicio: { texto: 'Fuera de servicio', clase: 'insignia--aviso' }
+};
+
+// estados que se pueden elegir a mano (en_uso lo define el sistema)
+const ESTADOS_EDITABLES = ['disponible', 'fuera_de_servicio'];
+
+const esBooleano = (valor: string) => valor === 'true' || valor === 'false';
+
 export const ConfiguracionPage = () => {
-  const [pestana, setPestana] = useState<'sistema' | 'equipos'>('sistema');
+  const [pestana, setPestana] = useState<Pestana>('sistema');
   const [configuraciones, setConfiguraciones] = useState<Configuracion[]>([]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
   const [guardando, setGuardando] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ clave: string; error: boolean; texto: string } | null>(null);
   const [valores, setValores] = useState<Record<string, string>>({});
   const [nuevoEquipo, setNuevoEquipo] = useState({ numero_equipo: '', descripcion: '' });
   const [agregando, setAgregando] = useState(false);
+  const [errorEquipo, setErrorEquipo] = useState('');
 
   const cargarConfiguraciones = async () => {
     try {
@@ -55,10 +77,17 @@ export const ConfiguracionPage = () => {
 
   const handleGuardarConfig = async (clave: string) => {
     setGuardando(clave);
+    setAviso(null);
     try {
       await api.patch(`/api/configuracion/${clave}`, { valor: valores[clave] });
-    } catch (error) {
-      console.error('Error guardando configuración:', error);
+      // el valor guardado pasa a ser el actual, así el botón se deshabilita de nuevo
+      setConfiguraciones((lista) =>
+        lista.map((c) => (c.clave === clave ? { ...c, valor: valores[clave] } : c))
+      );
+      setAviso({ clave, error: false, texto: 'Guardado' });
+      setTimeout(() => setAviso((a) => (a?.clave === clave && !a.error ? null : a)), 2500);
+    } catch (e: any) {
+      setAviso({ clave, error: true, texto: e.response?.data?.mensaje || 'No se pudo guardar' });
     } finally {
       setGuardando(null);
     }
@@ -76,6 +105,7 @@ export const ConfiguracionPage = () => {
   const handleAgregarEquipo = async () => {
     if (!nuevoEquipo.numero_equipo) return;
     setAgregando(true);
+    setErrorEquipo('');
     try {
       await api.post('/api/equipos', {
         numero_equipo: Number(nuevoEquipo.numero_equipo),
@@ -83,38 +113,29 @@ export const ConfiguracionPage = () => {
       });
       setNuevoEquipo({ numero_equipo: '', descripcion: '' });
       await cargarEquipos();
-    } catch (error: any) {
-      alert(error.response?.data?.mensaje || 'Error al agregar equipo');
+    } catch (e: any) {
+      setErrorEquipo(e.response?.data?.mensaje || 'No se pudo agregar el equipo.');
     } finally {
       setAgregando(false);
     }
   };
 
-  const etiquetas: Record<string, string> = {
-    terminal_activa: 'Terminal activa',
-    gestor_sesiones_activo: 'Gestor de sesiones activo',
-    tiempo_inactividad_minutos: 'Tiempo de inactividad (minutos)',
-    intervalo_heartbeat_segundos: 'Intervalo de heartbeat (segundos)'
-  };
-
-  const estadosEquipo = ['disponible', 'fuera_de_servicio'];
-
   return (
     <Layout>
-      <div style={{ padding: '24px', maxWidth: '900px' }}>
-        <h2 style={{ marginTop: 0, color: '#1e293b' }}>Configuración</h2>
+      <div className="pagina pagina--angosta">
+        <header className="pagina__encabezado">
+          <h1 className="pagina__titulo">Configuración</h1>
+        </header>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-          {(['sistema', 'equipos'] as const).map(p => (
+        <div className="pestanas" role="tablist" aria-label="Secciones de configuración">
+          {(['sistema', 'equipos'] as const).map((p) => (
             <button
               key={p}
+              type="button"
+              role="tab"
+              aria-selected={pestana === p}
+              className={`pestana ${pestana === p ? 'pestana--activa' : ''}`}
               onClick={() => setPestana(p)}
-              style={{
-                padding: '8px 20px', borderRadius: '8px', border: 'none',
-                background: pestana === p ? '#2563eb' : '#e2e8f0',
-                color: pestana === p ? 'white' : '#475569',
-                cursor: 'pointer', fontWeight: 'bold', fontSize: '14px'
-              }}
             >
               {p === 'sistema' ? 'Parámetros del sistema' : 'Equipos'}
             </button>
@@ -122,171 +143,154 @@ export const ConfiguracionPage = () => {
         </div>
 
         {pestana === 'sistema' ? (
-          <div style={{
-            background: 'white', borderRadius: '12px', padding: '24px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
-          }}>
-            <h3 style={{ marginTop: 0, color: '#1e293b' }}>Parámetros del sistema</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {configuraciones.map(c => (
-                <div key={c.clave} style={{
-                  display: 'flex', alignItems: 'center',
-                  justifyContent: 'space-between', gap: '16px',
-                  padding: '16px', borderRadius: '8px',
-                  background: '#f8fafc', border: '1px solid #e2e8f0'
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontWeight: 'bold', color: '#1e293b', fontSize: '14px' }}>
-                      {etiquetas[c.clave] || c.clave}
-                    </p>
-                    {c.descripcion && (
-                      <p style={{ margin: '2px 0 0', color: '#94a3b8', fontSize: '12px' }}>
-                        {c.descripcion}
-                      </p>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {c.valor === 'true' || c.valor === 'false' ? (
-                      <select
-                        value={valores[c.clave] || c.valor}
-                        onChange={e => setValores(v => ({ ...v, [c.clave]: e.target.value }))}
-                        style={{
-                          padding: '8px 12px', borderRadius: '6px',
-                          border: '1px solid #e2e8f0', fontSize: '14px', outline: 'none'
-                        }}
-                      >
-                        <option value="true">Activado</option>
-                        <option value="false">Desactivado</option>
-                      </select>
-                    ) : (
-                      <input
-                        type="number"
-                        value={valores[c.clave] || c.valor}
-                        onChange={e => setValores(v => ({ ...v, [c.clave]: e.target.value }))}
-                        style={{
-                          padding: '8px 12px', borderRadius: '6px',
-                          border: '1px solid #e2e8f0', fontSize: '14px',
-                          width: '80px', outline: 'none', textAlign: 'center'
-                        }}
-                      />
-                    )}
-                    <button
-                      onClick={() => handleGuardarConfig(c.clave)}
-                      disabled={guardando === c.clave}
-                      style={{
-                        padding: '8px 16px', borderRadius: '6px', border: 'none',
-                        background: guardando === c.clave ? '#94a3b8' : '#2563eb',
-                        color: 'white', cursor: guardando === c.clave ? 'default' : 'pointer',
-                        fontSize: '13px', fontWeight: 'bold'
-                      }}
-                    >
-                      {guardando === c.clave ? 'Guardando...' : 'Guardar'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <section className="tarjeta">
+            <header className="tarjeta__cabecera">
+              <h2 className="tarjeta__titulo">Parámetros del sistema</h2>
+            </header>
+
+            {configuraciones.length === 0 ? (
+              <p className="vacio">No hay parámetros configurados.</p>
+            ) : (
+              <ul className="lista">
+                {configuraciones.map((c) => {
+                  const actual = valores[c.clave] ?? c.valor;
+                  const cambio = actual !== c.valor && actual !== '';
+                  const mensaje = aviso?.clave === c.clave ? aviso : null;
+                  return (
+                    <li key={c.clave} className="parametro">
+                      <div className="parametro__texto">
+                        <span className="parametro__nombre">{ETIQUETAS[c.clave] || c.clave}</span>
+                        {c.descripcion && <span className="parametro__detalle">{c.descripcion}</span>}
+                      </div>
+
+                      <div className="parametro__control">
+                        {mensaje && (
+                          <span
+                            className={mensaje.error ? 'error-texto parametro__aviso' : 'parametro__aviso parametro__aviso--ok'}
+                            role={mensaje.error ? 'alert' : 'status'}
+                          >
+                            {mensaje.texto}
+                          </span>
+                        )}
+
+                        {esBooleano(c.valor) ? (
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={actual === 'true'}
+                            aria-label={ETIQUETAS[c.clave] || c.clave}
+                            className={`interruptor ${actual === 'true' ? 'interruptor--activo' : ''}`}
+                            onClick={() =>
+                              setValores((v) => ({ ...v, [c.clave]: actual === 'true' ? 'false' : 'true' }))
+                            }
+                          >
+                            <span className="interruptor__bola" />
+                          </button>
+                        ) : (
+                          <input
+                            type="number"
+                            min={1}
+                            className="entrada entrada--numero"
+                            aria-label={ETIQUETAS[c.clave] || c.clave}
+                            value={actual}
+                            onChange={(e) => setValores((v) => ({ ...v, [c.clave]: e.target.value }))}
+                          />
+                        )}
+
+                        <button
+                          type="button"
+                          className="btn btn--primario btn--chico"
+                          onClick={() => handleGuardarConfig(c.clave)}
+                          disabled={!cambio || guardando === c.clave}
+                        >
+                          {guardando === c.clave ? 'Guardando...' : 'Guardar'}
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{
-              background: 'white', borderRadius: '12px', padding: '24px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
-            }}>
-              <h3 style={{ marginTop: 0, color: '#1e293b' }}>Agregar equipo</h3>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="columna">
+            <section className="tarjeta">
+              <header className="tarjeta__cabecera">
+                <h2 className="tarjeta__titulo">Agregar equipo</h2>
+              </header>
+
+              <form
+                className="fila-formulario fila-formulario--sin-margen"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAgregarEquipo();
+                }}
+              >
                 <input
                   type="number"
+                  min={1}
+                  className="entrada entrada--numero-largo"
                   placeholder="Número de equipo"
+                  aria-label="Número de equipo"
                   value={nuevoEquipo.numero_equipo}
-                  onChange={e => setNuevoEquipo(v => ({ ...v, numero_equipo: e.target.value }))}
-                  style={{
-                    padding: '10px 14px', fontSize: '14px',
-                    borderRadius: '8px', border: '1px solid #e2e8f0',
-                    outline: 'none', width: '160px'
-                  }}
+                  onChange={(e) => setNuevoEquipo((v) => ({ ...v, numero_equipo: e.target.value }))}
                 />
                 <input
                   type="text"
+                  className="entrada"
                   placeholder="Descripción (opcional)"
+                  aria-label="Descripción del equipo"
                   value={nuevoEquipo.descripcion}
-                  onChange={e => setNuevoEquipo(v => ({ ...v, descripcion: e.target.value }))}
-                  style={{
-                    padding: '10px 14px', fontSize: '14px',
-                    borderRadius: '8px', border: '1px solid #e2e8f0',
-                    outline: 'none', flex: 1
-                  }}
+                  onChange={(e) => setNuevoEquipo((v) => ({ ...v, descripcion: e.target.value }))}
                 />
-                <button
-                  onClick={handleAgregarEquipo}
-                  disabled={agregando || !nuevoEquipo.numero_equipo}
-                  style={{
-                    padding: '10px 20px', borderRadius: '8px', border: 'none',
-                    background: agregando || !nuevoEquipo.numero_equipo ? '#94a3b8' : '#2563eb',
-                    color: 'white', cursor: agregando ? 'default' : 'pointer',
-                    fontWeight: 'bold', fontSize: '14px'
-                  }}
-                >
+                <button type="submit" className="btn btn--primario" disabled={agregando || !nuevoEquipo.numero_equipo}>
                   {agregando ? 'Agregando...' : 'Agregar'}
                 </button>
-              </div>
-            </div>
+              </form>
+              {errorEquipo && <p className="error-texto error-texto--arriba" role="alert">{errorEquipo}</p>}
+            </section>
 
-            <div style={{
-              background: 'white', borderRadius: '12px', padding: '24px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
-            }}>
-              <h3 style={{ marginTop: 0, color: '#1e293b' }}>
-                Equipos registrados ({equipos.length})
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {equipos.map(e => (
-                  <div key={e.id_equipo} style={{
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: 'space-between', padding: '12px 16px',
-                    borderRadius: '8px', border: '1px solid #e2e8f0',
-                    background: '#f8fafc'
-                  }}>
-                    <div>
-                      <p style={{ margin: 0, fontWeight: 'bold', color: '#1e293b' }}>
-                        PC {e.numero_equipo}
-                      </p>
-                      {e.descripcion && (
-                        <p style={{ margin: '2px 0 0', color: '#94a3b8', fontSize: '12px' }}>
-                          {e.descripcion}
-                        </p>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <span style={{
-                        padding: '2px 10px', borderRadius: '12px', fontSize: '12px',
-                        background: e.estado === 'disponible' ? '#dcfce7' : e.estado === 'en_uso' ? '#fef9c3' : '#fee2e2',
-                        color: e.estado === 'disponible' ? '#166534' : e.estado === 'en_uso' ? '#92400e' : '#991b1b'
-                      }}>
-                        {e.estado.replace('_', ' ')}
-                      </span>
-                      <select
-                        value={e.estado}
-                        onChange={ev => handleActualizarEquipo(e.id_equipo, ev.target.value)}
-                        style={{
-                          padding: '6px 10px', borderRadius: '6px',
-                          border: '1px solid #e2e8f0', fontSize: '13px', outline: 'none'
-                        }}
-                      >
-                        {estadosEquipo.map(s => (
-                          <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                ))}
-                {equipos.length === 0 && (
-                  <p style={{ color: '#94a3b8', textAlign: 'center' }}>
-                    No hay equipos registrados
-                  </p>
-                )}
-              </div>
-            </div>
+            <section className="tarjeta">
+              <header className="tarjeta__cabecera">
+                <h2 className="tarjeta__titulo">
+                  Equipos registrados <span className="tarjeta__conteo">{equipos.length}</span>
+                </h2>
+              </header>
+
+              {equipos.length === 0 ? (
+                <p className="vacio">No hay equipos registrados.</p>
+              ) : (
+                <ul className="lista">
+                  {equipos.map((e) => {
+                    const estado = ESTADOS_EQUIPO[e.estado] ?? { texto: e.estado, clase: 'insignia--sin-equipo' };
+                    return (
+                      <li key={e.id_equipo} className="elemento elemento--centrado">
+                        <div className="elemento__cuerpo">
+                          <span className="elemento__titulo">PC {e.numero_equipo}</span>
+                          {e.descripcion && <span className="elemento__detalle">{e.descripcion}</span>}
+                        </div>
+                        <div className="elemento__acciones">
+                          <span className={`insignia ${estado.clase}`}>{estado.texto}</span>
+                          <select
+                            className="entrada entrada--chica"
+                            aria-label={`Estado del PC ${e.numero_equipo}`}
+                            value={e.estado}
+                            onChange={(ev) => handleActualizarEquipo(e.id_equipo, ev.target.value)}
+                          >
+                            {!ESTADOS_EDITABLES.includes(e.estado) && (
+                              <option value={e.estado} disabled>{estado.texto}</option>
+                            )}
+                            {ESTADOS_EDITABLES.map((s) => (
+                              <option key={s} value={s}>{ESTADOS_EQUIPO[s].texto}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
           </div>
         )}
       </div>
