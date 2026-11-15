@@ -11,20 +11,16 @@ interface Visitante {
   institucion: string | null;
 }
 
+const FORM_VACIO = { nombre: '', motivo_visita: '', email: '', telefono: '', institucion: '' };
+
 export const RegistroVisitante = () => {
-  const [form, setForm] = useState({
-    nombre: '',
-    motivo_visita: '',
-    email: '',
-    telefono: '',
-    institucion: ''
-  });
+  const [form, setForm] = useState(FORM_VACIO);
   const [enviando, setEnviando] = useState(false);
   const [visitante, setVisitante] = useState<Visitante | null>(null);
   const [error, setError] = useState('');
 
   const handleChange = (campo: string, valor: string) => {
-    setForm(f => ({ ...f, [campo]: valor }));
+    setForm((f) => ({ ...f, [campo]: valor }));
   };
 
   const handleRegistrar = async () => {
@@ -40,9 +36,9 @@ export const RegistroVisitante = () => {
         institucion: form.institucion || undefined
       });
       setVisitante(response.data);
-      setForm({ nombre: '', motivo_visita: '', email: '', telefono: '', institucion: '' });
-    } catch (error: any) {
-      setError(error.response?.data?.mensaje || 'Error al registrar visitante');
+      setForm(FORM_VACIO);
+    } catch (e: any) {
+      setError(e.response?.data?.mensaje || 'No se pudo registrar al visitante.');
     } finally {
       setEnviando(false);
     }
@@ -54,127 +50,71 @@ export const RegistroVisitante = () => {
   };
 
   return (
-    <div>
-      <h3 style={{ marginTop: 0, color: '#1e293b' }}>Registro de visitantes</h3>
+    <section className="tarjeta">
+      <header className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo">Registro de visitantes</h2>
+      </header>
 
       {visitante ? (
-        <div style={{
-          padding: '24px', borderRadius: '12px',
-          background: '#f0fdf4', border: '1px solid #bbf7d0',
-          textAlign: 'center'
-        }}>
-          <p style={{ margin: '0 0 8px', color: '#166534', fontSize: '14px' }}>
-            Visitante registrado correctamente
-          </p>
-          <p style={{ margin: '0 0 4px', fontWeight: 'bold', color: '#1e293b', fontSize: '16px' }}>
-            {visitante.nombre}
-          </p>
-          {visitante.institucion && (
-            <p style={{ margin: '0 0 4px', color: '#64748b', fontSize: '13px' }}>
-              {visitante.institucion}
-            </p>
-          )}
-          <div style={{
-            margin: '16px auto', padding: '16px 24px',
-            background: 'white', borderRadius: '8px',
-            display: 'inline-block', border: '2px solid #166534'
-          }}>
-            <p style={{ margin: '0 0 4px', color: '#64748b', fontSize: '12px' }}>
-              Código temporal
-            </p>
-            <p style={{ margin: 0, fontSize: '36px', fontWeight: 'bold', letterSpacing: '8px', color: '#166534' }}>
-              {visitante.codigo_temporal}
-            </p>
+        <div className="codigo-generado">
+          <p className="codigo-generado__aviso">Visitante registrado</p>
+          <p className="codigo-generado__nombre">{visitante.nombre}</p>
+          {visitante.institucion && <p className="codigo-generado__detalle">{visitante.institucion}</p>}
+
+          <div className="codigo-generado__caja">
+            <span className="codigo-generado__etiqueta">Código temporal</span>
+            <span className="codigo-generado__valor">{visitante.codigo_temporal}</span>
           </div>
-          <p style={{ margin: '8px 0 16px', color: '#64748b', fontSize: '12px' }}>
-            Válido hasta: {new Date(visitante.timestamp_expiracion).toLocaleTimeString('es-CO', {
+
+          <p className="codigo-generado__detalle">
+            Válido hasta {new Date(visitante.timestamp_expiracion).toLocaleTimeString('es-CO', {
               hour: '2-digit', minute: '2-digit'
             })}
           </p>
-          <button
-            onClick={handleNuevo}
-            style={{
-              padding: '10px 24px', borderRadius: '8px',
-              border: 'none', background: '#2563eb',
-              color: 'white', cursor: 'pointer',
-              fontSize: '14px', fontWeight: 'bold'
-            }}
-          >
+          <button type="button" className="btn btn--primario" onClick={handleNuevo}>
             Registrar otro visitante
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <input
-            type="text"
-            placeholder="Nombre completo *"
-            value={form.nombre}
-            onChange={e => handleChange('nombre', e.target.value)}
-            style={{
-              gridColumn: '1 / -1', padding: '10px 14px', fontSize: '14px',
-              borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-            }}
-          />
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={form.email}
-            onChange={e => handleChange('email', e.target.value)}
-            style={{
-              padding: '10px 14px', fontSize: '14px',
-              borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-            }}
-          />
-          <input
-            type="tel"
-            placeholder="Teléfono"
-            value={form.telefono}
-            onChange={e => handleChange('telefono', e.target.value)}
-            style={{
-              padding: '10px 14px', fontSize: '14px',
-              borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-            }}
-          />
-          <input
-            type="text"
-            placeholder="Institución"
-            value={form.institucion}
-            onChange={e => handleChange('institucion', e.target.value)}
-            style={{
-              padding: '10px 14px', fontSize: '14px',
-              borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-            }}
-          />
-          <input
-            type="text"
-            placeholder="Motivo de la visita"
-            value={form.motivo_visita}
-            onChange={e => handleChange('motivo_visita', e.target.value)}
-            style={{
-              padding: '10px 14px', fontSize: '14px',
-              borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-            }}
-          />
-          {error && (
-            <p style={{ gridColumn: '1 / -1', margin: 0, color: '#dc2626', fontSize: '14px' }}>
-              {error}
-            </p>
-          )}
+        <form
+          className="formulario"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleRegistrar();
+          }}
+        >
+          <label className="campo campo--ancho">
+            <span className="campo__etiqueta">Nombre completo *</span>
+            <input className="entrada" type="text" value={form.nombre} onChange={(e) => handleChange('nombre', e.target.value)} />
+          </label>
+          <label className="campo">
+            <span className="campo__etiqueta">Correo electrónico</span>
+            <input className="entrada" type="email" value={form.email} onChange={(e) => handleChange('email', e.target.value)} />
+          </label>
+          <label className="campo">
+            <span className="campo__etiqueta">Teléfono</span>
+            <input className="entrada" type="tel" value={form.telefono} onChange={(e) => handleChange('telefono', e.target.value)} />
+          </label>
+          <label className="campo">
+            <span className="campo__etiqueta">Institución</span>
+            <input className="entrada" type="text" value={form.institucion} onChange={(e) => handleChange('institucion', e.target.value)} />
+          </label>
+          <label className="campo">
+            <span className="campo__etiqueta">Motivo de la visita</span>
+            <input className="entrada" type="text" value={form.motivo_visita} onChange={(e) => handleChange('motivo_visita', e.target.value)} />
+          </label>
+
+          {error && <p className="error-texto campo--ancho" role="alert">{error}</p>}
+
           <button
-            onClick={handleRegistrar}
+            type="submit"
+            className="btn btn--primario campo--ancho"
             disabled={enviando || !form.nombre.trim()}
-            style={{
-              gridColumn: '1 / -1', padding: '10px', borderRadius: '8px',
-              border: 'none',
-              background: enviando || !form.nombre.trim() ? '#94a3b8' : '#2563eb',
-              color: 'white', cursor: enviando ? 'default' : 'pointer',
-              fontSize: '14px', fontWeight: 'bold'
-            }}
           >
             {enviando ? 'Registrando...' : 'Registrar y generar código'}
           </button>
-        </div>
+        </form>
       )}
-    </div>
+    </section>
   );
 };

@@ -11,6 +11,18 @@ interface Programacion {
   estado: string;
 }
 
+const TIPOS: Record<string, string> = {
+  sala_estudio: 'Sala de estudio',
+  sala_television: 'Sala de televisión',
+  otro: 'Otro'
+};
+
+const ESTADOS: Record<string, { clase: string; texto: string }> = {
+  pendiente: { clase: 'insignia--pendiente', texto: 'Pendiente' },
+  asignado: { clase: 'insignia--activa', texto: 'Asignado' },
+  cancelado: { clase: 'insignia--aviso', texto: 'Cancelado' }
+};
+
 export const ProgramacionRecursos = ({ id_turno }: { id_turno: number }) => {
   const [programaciones, setProgramaciones] = useState<Programacion[]>([]);
   const [codigo, setCodigo] = useState('');
@@ -18,6 +30,7 @@ export const ProgramacionRecursos = ({ id_turno }: { id_turno: number }) => {
   const [descripcion, setDescripcion] = useState('');
   const [hora, setHora] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
 
   const cargarProgramaciones = async () => {
     try {
@@ -35,6 +48,7 @@ export const ProgramacionRecursos = ({ id_turno }: { id_turno: number }) => {
   const handleAgregar = async () => {
     if (!codigo.trim()) return;
     setEnviando(true);
+    setError('');
     try {
       await api.post('/api/programaciones', {
         codigo,
@@ -46,8 +60,8 @@ export const ProgramacionRecursos = ({ id_turno }: { id_turno: number }) => {
       setDescripcion('');
       setHora('');
       await cargarProgramaciones();
-    } catch (error: any) {
-      alert(error.response?.data?.mensaje || 'Error al programar recurso');
+    } catch (e: any) {
+      setError(e.response?.data?.mensaje || 'No se pudo programar el recurso.');
     } finally {
       setEnviando(false);
     }
@@ -62,136 +76,92 @@ export const ProgramacionRecursos = ({ id_turno }: { id_turno: number }) => {
     }
   };
 
-  const coloresEstado: Record<string, string> = {
-    pendiente: '#fef9c3',
-    asignado: '#dcfce7',
-    cancelado: '#fee2e2'
-  };
-
   return (
-    <div>
-      <h3 style={{ marginTop: 0, color: '#1e293b' }}>Programación de recursos</h3>
+    <section className="tarjeta">
+      <header className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo">
+          Programación de recursos <span className="tarjeta__conteo">{programaciones.length}</span>
+        </h2>
+      </header>
 
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr',
-        gap: '8px', marginBottom: '16px'
-      }}>
-        <input
-          type="text"
-          placeholder="Código estudiantil"
-          value={codigo}
-          onChange={e => setCodigo(e.target.value)}
-          style={{
-            padding: '10px 14px', fontSize: '14px',
-            borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-          }}
-        />
-        <select
-          value={tipoRecurso}
-          onChange={e => setTipoRecurso(e.target.value)}
-          style={{
-            padding: '10px 14px', fontSize: '14px',
-            borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-          }}
-        >
-          <option value="sala_estudio">Sala de estudio</option>
-          <option value="sala_television">Sala de televisión</option>
-          <option value="otro">Otro</option>
-        </select>
-        <input
-          type="text"
-          placeholder="Descripción del recurso"
-          value={descripcion}
-          onChange={e => setDescripcion(e.target.value)}
-          style={{
-            padding: '10px 14px', fontSize: '14px',
-            borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-          }}
-        />
-        <input
-          type="time"
-          value={hora}
-          onChange={e => setHora(e.target.value)}
-          style={{
-            padding: '10px 14px', fontSize: '14px',
-            borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-          }}
-        />
-        <button
-          onClick={handleAgregar}
-          disabled={enviando || !codigo.trim()}
-          style={{
-            gridColumn: '1 / -1', padding: '10px', borderRadius: '8px',
-            border: 'none', background: enviando || !codigo.trim() ? '#94a3b8' : '#2563eb',
-            color: 'white', cursor: enviando ? 'default' : 'pointer',
-            fontSize: '14px', fontWeight: 'bold'
-          }}
-        >
-          Programar recurso
+      <form
+        className="formulario"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleAgregar();
+        }}
+      >
+        <label className="campo">
+          <span className="campo__etiqueta">Código estudiantil</span>
+          <input className="entrada" type="text" value={codigo} onChange={(e) => setCodigo(e.target.value)} />
+        </label>
+        <label className="campo">
+          <span className="campo__etiqueta">Recurso</span>
+          <select className="entrada" value={tipoRecurso} onChange={(e) => setTipoRecurso(e.target.value)}>
+            {Object.entries(TIPOS).map(([valor, texto]) => (
+              <option key={valor} value={valor}>{texto}</option>
+            ))}
+          </select>
+        </label>
+        <label className="campo">
+          <span className="campo__etiqueta">Descripción</span>
+          <input className="entrada" type="text" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+        </label>
+        <label className="campo">
+          <span className="campo__etiqueta">Hora estimada</span>
+          <input className="entrada" type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+        </label>
+
+        {error && <p className="error-texto campo--ancho" role="alert">{error}</p>}
+
+        <button type="submit" className="btn btn--primario campo--ancho" disabled={enviando || !codigo.trim()}>
+          {enviando ? 'Programando...' : 'Programar recurso'}
         </button>
-      </div>
+      </form>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {programaciones.map(p => (
-          <div key={p.id_programacion} style={{
-            padding: '12px 16px', borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-            background: coloresEstado[p.estado] || 'white'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <p style={{ margin: 0, fontWeight: 'bold', color: '#1e293b', fontSize: '14px' }}>
-                  {p.nombre_estudiante || p.codigo_estudiantil}
-                </p>
-                <p style={{ margin: '2px 0 0', color: '#64748b', fontSize: '13px' }}>
-                  {p.tipo_recurso.replace('_', ' ')} {p.descripcion_recurso && `· ${p.descripcion_recurso}`}
-                  {p.hora_estimada_disponibilidad && ` · ${p.hora_estimada_disponibilidad}`}
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
-                {p.estado === 'pendiente' && (
-                  <>
-                    <button
-                      onClick={() => handleActualizarEstado(p.id_programacion, 'asignado')}
-                      style={{
-                        padding: '4px 10px', borderRadius: '6px',
-                        border: '1px solid #bbf7d0', background: 'white',
-                        color: '#166534', cursor: 'pointer', fontSize: '12px'
-                      }}
-                    >
-                      Asignar
-                    </button>
-                    <button
-                      onClick={() => handleActualizarEstado(p.id_programacion, 'cancelado')}
-                      style={{
-                        padding: '4px 10px', borderRadius: '6px',
-                        border: '1px solid #fecaca', background: 'white',
-                        color: '#dc2626', cursor: 'pointer', fontSize: '12px'
-                      }}
-                    >
-                      Cancelar
-                    </button>
-                  </>
-                )}
-                {p.estado !== 'pendiente' && (
-                  <span style={{
-                    padding: '4px 10px', borderRadius: '6px', fontSize: '12px',
-                    color: p.estado === 'asignado' ? '#166534' : '#dc2626',
-                    fontWeight: 'bold'
-                  }}>
-                    {p.estado}
+      {programaciones.length === 0 ? (
+        <p className="vacio">No hay recursos programados.</p>
+      ) : (
+        <ul className="lista lista--separada">
+          {programaciones.map((p) => {
+            const estado = ESTADOS[p.estado] ?? { clase: 'insignia--sin-equipo', texto: p.estado };
+            return (
+              <li key={p.id_programacion} className="elemento">
+                <div className="elemento__cuerpo">
+                  <span className="elemento__titulo">{p.nombre_estudiante || p.codigo_estudiantil}</span>
+                  <span className="elemento__detalle">
+                    {TIPOS[p.tipo_recurso] ?? p.tipo_recurso}
+                    {p.descripcion_recurso && ` · ${p.descripcion_recurso}`}
+                    {p.hora_estimada_disponibilidad && ` · ${p.hora_estimada_disponibilidad.slice(0, 5)}`}
                   </span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-        {programaciones.length === 0 && (
-          <p style={{ color: '#94a3b8', textAlign: 'center', fontSize: '14px' }}>
-            No hay recursos programados
-          </p>
-        )}
-      </div>
-    </div>
+                </div>
+                <div className="elemento__acciones">
+                  {p.estado === 'pendiente' ? (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn--secundario btn--chico"
+                        onClick={() => handleActualizarEstado(p.id_programacion, 'asignado')}
+                      >
+                        Asignar
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--texto-peligro btn--chico"
+                        onClick={() => handleActualizarEstado(p.id_programacion, 'cancelado')}
+                      >
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <span className={`insignia ${estado.clase}`}>{estado.texto}</span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 };

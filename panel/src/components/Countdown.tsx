@@ -20,21 +20,17 @@ export const Countdown = ({ timestamp_expiracion }: { timestamp_expiracion: stri
   }, [timestamp_expiracion]);
 
   if (!restante) {
-    return (
-      <span style={{ color: '#dc2626', fontSize: '13px', fontWeight: 'bold' }}>
-        Código expirado
-      </span>
-    );
+    return <span className="cuenta cuenta--expirado">Código expirado</span>;
   }
 
   const urgente = restante.horas === 0 && restante.minutos < 30;
 
   return (
-    <span style={{ color: urgente ? '#dc2626' : '#64748b', fontSize: '13px' }}>
-      {restante.horas > 0 && `${restante.horas}h `}
-      {String(restante.minutos).padStart(2, '0')}m {String(restante.segundos).padStart(2, '0')}s
+    <span className={`cuenta ${urgente ? 'cuenta--urgente' : ''}`}>
+      {restante.horas > 0 && `${restante.horas} h `}
+      {String(restante.minutos).padStart(2, '0')} min {String(restante.segundos).padStart(2, '0')} s
       {' · '}
-      Válido hasta: {new Date(timestamp_expiracion).toLocaleTimeString('es-CO', {
+      Válido hasta {new Date(timestamp_expiracion).toLocaleTimeString('es-CO', {
         hour: '2-digit', minute: '2-digit'
       })}
     </span>

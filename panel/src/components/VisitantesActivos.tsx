@@ -17,6 +17,7 @@ interface Visitante {
 export const VisitantesActivos = ({ id_turno }: { id_turno: number }) => {
   const [visitantes, setVisitantes] = useState<Visitante[]>([]);
   const [nuevaHora, setNuevaHora] = useState<Record<number, string>>({});
+  const [error, setError] = useState('');
 
   const cargarVisitantes = async () => {
     try {
@@ -27,7 +28,7 @@ export const VisitantesActivos = ({ id_turno }: { id_turno: number }) => {
     }
   };
 
-    useEffect(() => {
+  useEffect(() => {
     cargarVisitantes();
 
     const handler = () => cargarVisitantes();
@@ -38,97 +39,81 @@ export const VisitantesActivos = ({ id_turno }: { id_turno: number }) => {
     const intervalo = setInterval(cargarVisitantes, 30000);
 
     return () => {
-        socket.off('visitante_actualizado', handler);
-        socket.off('entrada_registrada', handler);
-        socket.off('salida_registrada', handler);
-        clearInterval(intervalo);
+      socket.off('visitante_actualizado', handler);
+      socket.off('entrada_registrada', handler);
+      socket.off('salida_registrada', handler);
+      clearInterval(intervalo);
     };
-    }, [id_turno]);
+  }, [id_turno]);
 
   const handleCambiarExpiracion = async (id_visitante: number) => {
     const hora = nuevaHora[id_visitante];
     if (!hora) return;
     const hoy = new Date().toLocaleDateString('en-CA');
     const nuevaExpiracion = new Date(`${hoy}T${hora}:00`);
+    setError('');
     try {
       await api.patch(`/api/visitantes/${id_visitante}/expiracion`, {
         timestamp_expiracion: nuevaExpiracion.toISOString()
       });
       await cargarVisitantes();
-      setNuevaHora(h => ({ ...h, [id_visitante]: '' }));
-    } catch (error: any) {
-      alert(error.response?.data?.mensaje || 'Error al actualizar expiración');
+      setNuevaHora((h) => ({ ...h, [id_visitante]: '' }));
+    } catch (e: any) {
+      setError(e.response?.data?.mensaje || 'No se pudo actualizar la expiración.');
     }
   };
 
-  if (visitantes.length === 0) return null;
-
   return (
-    <div>
-      <h3 style={{ marginTop: 0, color: '#1e293b' }}>
-        Visitantes activos ({visitantes.length})
-      </h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {visitantes.map(v => (
-          <div key={v.id_visitante} style={{
-            padding: '16px', borderRadius: '8px',
-            border: '1px solid #e2e8f0', background: '#f8fafc'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <p style={{ margin: 0, fontWeight: 'bold', color: '#1e293b' }}>
-                  {v.nombre}
-                  <span style={{
-                    marginLeft: '8px', padding: '2px 8px', borderRadius: '12px', fontSize: '11px',
-                    background: v.ha_ingresado ? '#dcfce7' : '#fef9c3',
-                    color: v.ha_ingresado ? '#166534' : '#92400e'
-                    }}>
+    <section className="tarjeta">
+      <header className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo">
+          Visitantes con código vigente <span className="tarjeta__conteo">{visitantes.length}</span>
+        </h2>
+      </header>
+
+      {error && <p className="error-texto" role="alert">{error}</p>}
+
+      {visitantes.length === 0 ? (
+        <p className="vacio">No hay visitantes con código vigente.</p>
+      ) : (
+        <ul className="lista">
+          {visitantes.map((v) => (
+            <li key={v.id_visitante} className="visitante">
+              <div className="visitante__datos">
+                <div className="visitante__cabecera">
+                  <span className="visitante__nombre">{v.nombre}</span>
+                  <span className={`insignia ${v.ha_ingresado ? 'insignia--activa' : 'insignia--pendiente'}`}>
                     {v.ha_ingresado ? 'Ya ingresó' : 'Aún no ingresa'}
-                </span>
-                </p>
-                {v.institucion && (
-                  <p style={{ margin: '2px 0 0', color: '#64748b', fontSize: '13px' }}>
-                    {v.institucion}
-                  </p>
-                )}
-                <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{
-                    padding: '2px 10px', borderRadius: '12px',
-                    background: '#dbeafe', color: '#1d4ed8',
-                    fontSize: '16px', fontWeight: 'bold', letterSpacing: '4px'
-                  }}>
-                    {v.codigo_temporal}
                   </span>
+                </div>
+                {v.institucion && <span className="visitante__detalle">{v.institucion}</span>}
+                <div className="visitante__codigo-fila">
+                  <span className="codigo-chip">{v.codigo_temporal}</span>
                   <Countdown timestamp_expiracion={v.timestamp_expiracion} />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+
+              <div className="visitante__expiracion">
                 <input
                   type="time"
+                  className="entrada entrada--chica"
+                  aria-label={`Nueva hora de expiración para ${v.nombre}`}
                   value={nuevaHora[v.id_visitante] || ''}
-                  onChange={e => setNuevaHora(h => ({ ...h, [v.id_visitante]: e.target.value }))}
-                  style={{
-                    padding: '6px 10px', borderRadius: '6px',
-                    border: '1px solid #e2e8f0', fontSize: '13px', outline: 'none'
-                  }}
+                  onChange={(e) => setNuevaHora((h) => ({ ...h, [v.id_visitante]: e.target.value }))}
                 />
                 <button
+                  type="button"
+                  className="btn btn--secundario btn--chico"
                   onClick={() => handleCambiarExpiracion(v.id_visitante)}
                   disabled={!nuevaHora[v.id_visitante]}
-                  style={{
-                    padding: '6px 14px', borderRadius: '6px', border: 'none',
-                    background: !nuevaHora[v.id_visitante] ? '#94a3b8' : '#f59e0b',
-                    color: 'white', cursor: !nuevaHora[v.id_visitante] ? 'default' : 'pointer',
-                    fontSize: '13px', fontWeight: 'bold'
-                  }}
                 >
                   Cambiar expiración
                 </button>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 };

@@ -52,77 +52,58 @@ export const Bitacora = ({ id_turno }: { id_turno: number }) => {
     }
   };
 
-  const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleTimeString('es-CO', {
-      hour: '2-digit', minute: '2-digit'
-    });
-  };
+  const formatHora = (fecha: string) =>
+    new Date(fecha).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div>
-      <h3 style={{ marginTop: 0, color: '#1e293b' }}>Bitácora del turno</h3>
+    <section className="tarjeta">
+      <header className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo">
+          Bitácora del turno <span className="tarjeta__conteo">{entradas.length}</span>
+        </h2>
+      </header>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+      <form
+        className="fila-formulario"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleAgregar();
+        }}
+      >
         <input
+          className="entrada"
           type="text"
-          placeholder="Nueva entrada en bitácora..."
+          placeholder="Nueva entrada en la bitácora"
+          aria-label="Nueva entrada en la bitácora"
           value={nueva}
-          onChange={e => setNueva(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleAgregar()}
-          style={{
-            flex: 1, padding: '10px 14px', fontSize: '14px',
-            borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none'
-          }}
+          onChange={(e) => setNueva(e.target.value)}
         />
-        <button
-          onClick={handleAgregar}
-          disabled={enviando || !nueva.trim()}
-          style={{
-            padding: '10px 20px', borderRadius: '8px', border: 'none',
-            background: enviando || !nueva.trim() ? '#94a3b8' : '#2563eb',
-            color: 'white', cursor: enviando ? 'default' : 'pointer',
-            fontSize: '14px', fontWeight: 'bold'
-          }}
-        >
+        <button type="submit" className="btn btn--primario" disabled={enviando || !nueva.trim()}>
           Agregar
         </button>
-      </div>
+      </form>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {entradas.map(e => (
-          <div key={e.id_entrada} style={{
-            display: 'flex', alignItems: 'flex-start',
-            justifyContent: 'space-between', padding: '12px 16px',
-            background: '#f8fafc', borderRadius: '8px',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div>
-              <p style={{ margin: 0, color: '#1e293b', fontSize: '14px' }}>
-                {e.descripcion}
-              </p>
-              <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '12px' }}>
-                {e.nombre_encargado} · {formatFecha(e.timestamp_registro)}
-              </p>
-            </div>
-            <button
-              onClick={() => handleEliminar(e.id_entrada)}
-              style={{
-                padding: '4px 10px', borderRadius: '6px',
-                border: '1px solid #fecaca', background: 'white',
-                color: '#dc2626', cursor: 'pointer', fontSize: '12px',
-                marginLeft: '12px', flexShrink: 0
-              }}
-            >
-              Eliminar
-            </button>
-          </div>
-        ))}
-        {entradas.length === 0 && (
-          <p style={{ color: '#94a3b8', textAlign: 'center', fontSize: '14px' }}>
-            No hay entradas en la bitácora
-          </p>
-        )}
-      </div>
-    </div>
+      {entradas.length === 0 ? (
+        <p className="vacio">No hay entradas en la bitácora.</p>
+      ) : (
+        <ul className="lista lista--separada">
+          {entradas.map((e) => (
+            <li key={e.id_entrada} className="elemento">
+              <div className="elemento__cuerpo">
+                <span className="elemento__titulo elemento__titulo--normal">{e.descripcion}</span>
+                <span className="elemento__detalle">
+                  {e.nombre_encargado} · {formatHora(e.timestamp_registro)}
+                </span>
+              </div>
+              <div className="elemento__acciones">
+                <button type="button" className="btn btn--texto-peligro btn--chico" onClick={() => handleEliminar(e.id_entrada)}>
+                  Eliminar
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 };
