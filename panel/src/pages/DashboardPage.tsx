@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { EstadoLaboratorio } from '../components/EstadoLaboratorio';
-import { RegistrosAcceso } from '../components/RegistrosAcceso';
-import { Novedades } from '../components/Novedades';
+import { ResumenLaboratorio } from '../components/dashboard/ResumenLaboratorio';
+import { PersonasLaboratorio } from '../components/dashboard/PersonasLaboratorio';
+import { MapaEquipos } from '../components/dashboard/MapaEquipos';
+import { NovedadesTurno } from '../components/dashboard/NovedadesTurno';
+import { useEstadoLaboratorio } from '../hooks/useEstadoLaboratorio';
+import { useAhora } from '../hooks/useAhora';
+import { duracion } from '../utils/formato';
 import { api } from '../services/api';
 
 interface Turno {
@@ -17,90 +22,113 @@ export const DashboardPage = () => {
   const [turno, setTurno] = useState<Turno | null>(null);
   const [cargando, setCargando] = useState(true);
 
-  const cargarTurno = async () => {
-    try {
-      const response = await api.get('/api/turnos/activo');
-      setTurno(response.data);
-    } catch {
-      setTurno(null);
-    } finally {
-      setCargando(false);
-    }
-  };
-
   useEffect(() => {
+    const cargarTurno = async () => {
+      try {
+        const response = await api.get('/api/turnos/activo');
+        setTurno(response.data);
+      } catch {
+        setTurno(null);
+      } finally {
+        setCargando(false);
+      }
+    };
     cargarTurno();
   }, []);
 
-  if (cargando) return <Layout><div style={{ padding: '24px' }}>Cargando...</div></Layout>;
+  if (cargando) {
+    return (
+      <Layout>
+        <div className="pagina">
+          <p className="vacio">Cargando...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
-      <div style={{ padding: '24px', maxWidth: '1200px' }}>
-        <h2 style={{ marginTop: 0, color: '#1e293b' }}>Dashboard</h2>
-
-        {turno ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{
-              background: 'white', borderRadius: '12px', padding: '20px 24px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              flexWrap: 'wrap', gap: '12px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <span style={{
-                  padding: '4px 12px', borderRadius: '20px',
-                  background: '#dcfce7', color: '#166534',
-                  fontSize: '13px', fontWeight: 'bold'
-                }}>
-                  Turno activo
-                </span>
-                <div>
-                  <p style={{ margin: 0, fontWeight: 'bold', color: '#1e293b', fontSize: '15px' }}>
-                    {turno.nombre_encargado_apertura}
-                  </p>
-                  <p style={{ margin: '2px 0 0', color: '#64748b', fontSize: '13px' }}>
-                    {new Date(turno.fecha_apertura).toLocaleDateString('es-CO', {
-                      day: '2-digit', month: '2-digit', year: 'numeric'
-                    })} · desde las {turno.hora_apertura?.slice(0, 5)}
-                  </p>
-                </div>
-              </div>
-              <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px' }}>
-                Turno #{turno.id_turno}
-              </p>
-            </div>
-
-            <div style={{
-              background: 'white', borderRadius: '12px', padding: '24px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
-            }}>
-              <EstadoLaboratorio id_turno={turno.id_turno} />
-            </div>
-            <div style={{
-              background: 'white', borderRadius: '12px', padding: '24px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
-            }}>
-              <RegistrosAcceso id_turno={turno.id_turno} />
-            </div>
-            <div style={{
-              background: 'white', borderRadius: '12px', padding: '24px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
-            }}>
-              <Novedades id_turno={turno.id_turno} />
-            </div>
-          </div>
-        ) : (
-          <div style={{
-            background: 'white', borderRadius: '12px', padding: '48px',
-            textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
-          }}>
-            <p style={{ color: '#94a3b8', fontSize: '16px' }}>
-              No hay turno activo. Ve a <strong>Gestión de turno</strong> para abrir uno.
-            </p>
-          </div>
-        )}
+      <div className="pagina">
+        {turno ? <PanelTurno turno={turno} /> : <SinTurno />}
       </div>
     </Layout>
+  );
+};
+
+const SinTurno = () => {
+  const navigate = useNavigate();
+  return (
+    <>
+      <header className="pagina__encabezado">
+        <h1 className="pagina__titulo">Estado del laboratorio</h1>
+      </header>
+      <section className="tarjeta tarjeta--centro">
+        <p className="vacio">No hay un turno activo.</p>
+        <button type="button" className="boton-primario" onClick={() => navigate('/turno')}>
+          Ir a Gestión de turno
+        </button>
+      </section>
+    </>
+  );
+};
+
+const PanelTurno = ({ turno }: { turno: Turno }) => {
+  const { personas, equipos, novedades, cargando, error, enVivo, actualizado, recargar } =
+    useEstadoLaboratorio(turno.id_turno);
+  const [abierto, setAbierto] = useState<number | null>(null);
+  const ahora = useAhora();
+
+  // fecha y hora de apertura juntas, para calcular cuánto lleva el turno
+  const apertura = `${turno.fecha_apertura.slice(0, 10)}T${turno.hora_apertura}`;
+  const aperturaValida = !isNaN(new Date(apertura).getTime());
+
+  return (
+    <>
+      <header className="pagina__encabezado">
+        <div>
+          <h1 className="pagina__titulo">Estado del laboratorio</h1>
+          <p className="pagina__subtitulo">
+            <span className="insignia insignia--activa">Turno activo</span>
+            {turno.nombre_encargado_apertura} · desde las {turno.hora_apertura?.slice(0, 5)}
+            {aperturaValida && ` (${duracion(apertura, ahora)})`}
+          </p>
+        </div>
+
+        <div className="en-vivo">
+          <span className={`en-vivo__estado ${enVivo ? '' : 'en-vivo__estado--caido'}`}>
+            <span className="en-vivo__punto" />
+            {enVivo ? 'En vivo' : 'Sin conexión en tiempo real'}
+          </span>
+          {actualizado && (
+            <span className="en-vivo__hora">
+              Actualizado {actualizado.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+          )}
+        </div>
+      </header>
+
+      {error && (
+        <div className="aviso-error" role="alert">
+          No se pudo cargar la información del laboratorio.
+          <button type="button" onClick={recargar}>Reintentar</button>
+        </div>
+      )}
+
+      {cargando ? (
+        <p className="vacio">Cargando información del turno...</p>
+      ) : (
+        <>
+          <ResumenLaboratorio personas={personas} equipos={equipos} novedades={novedades} />
+
+          <div className="rejilla">
+            <PersonasLaboratorio personas={personas} abierto={abierto} onAbrir={setAbierto} />
+            <div className="columna-lateral">
+              <MapaEquipos equipos={equipos} onSeleccionarRegistro={setAbierto} />
+              <NovedadesTurno novedades={novedades} />
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 };

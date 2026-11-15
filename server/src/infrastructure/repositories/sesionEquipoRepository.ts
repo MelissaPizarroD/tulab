@@ -6,11 +6,13 @@ export const sesionEquipoRepository = {
     id_registro: number;
     id_equipo: number;
     id_dispositivo: number;
+    ip_origen?: string
   }) {
     const result = await pool.query(
-      `INSERT INTO sesion_equipo (id_registro, id_equipo, id_dispositivo, hora_inicio, estado)
-       VALUES ($1, $2, $3, NOW(), 'activa') RETURNING *`,
-      [data.id_registro, data.id_equipo, data.id_dispositivo]
+      `INSERT INTO sesion_equipo
+        (id_registro, id_equipo, id_dispositivo, hora_inicio, ip_origen, estado)
+      VALUES ($1, $2, $3, NOW(), $4, 'activa') RETURNING *`,
+      [data.id_registro, data.id_equipo, data.id_dispositivo, data.ip_origen || null]
     );
     return result.rows[0];
   },

@@ -1,19 +1,25 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import logo from '../assets/tulab_logo.svg';
+import '../styles/panel.css';
+import {
+  IconoDashboard, IconoReloj, IconoHistorial, IconoAjustes, IconoSalir, IconoPanel
+} from './Iconos';
 
 const menuItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { path: '/turno', label: 'Gestión de turno', icon: '🕐' },
-  { path: '/historicos', label: 'Históricos', icon: '📋' },
-  { path: '/configuracion', label: 'Configuración', icon: '⚙️' },
+  { path: '/dashboard', label: 'Dashboard', Icono: IconoDashboard },
+  { path: '/turno', label: 'Gestión de turno', Icono: IconoReloj },
+  { path: '/historicos', label: 'Históricos', Icono: IconoHistorial },
+  { path: '/configuracion', label: 'Configuración', Icono: IconoAjustes }
 ];
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const { encargado, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [colapsado, setColapsado] = useState(false);
+  // en pantallas pequeñas la barra empieza colapsada
+  const [colapsado, setColapsado] = useState(() => window.innerWidth < 900);
 
   const handleLogout = () => {
     logout();
@@ -21,83 +27,57 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
-      <div style={{
-        width: colapsado ? '64px' : '220px',
-        background: '#1e293b',
-        display: 'flex', flexDirection: 'column',
-        transition: 'width 0.2s',
-        flexShrink: 0
-      }}>
-        <div style={{
-          padding: '20px 16px',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: '1px solid #334155'
-        }}>
-          {!colapsado && (
-            <span style={{ color: 'white', fontWeight: 'bold', fontSize: '16px' }}>
-              TuLab
-            </span>
-          )}
+    <div className="app">
+      <aside className={`lateral ${colapsado ? 'lateral--colapsado' : ''}`}>
+        <div className="lateral__cabecera">
+          {!colapsado && <img className="lateral__logo" src={logo} alt="TuLab" />}
           <button
+            type="button"
+            className="lateral__alternar"
             onClick={() => setColapsado(!colapsado)}
-            style={{
-              background: 'none', border: 'none',
-              color: '#94a3b8', cursor: 'pointer',
-              fontSize: '18px', padding: '4px'
-            }}
+            aria-label={colapsado ? 'Expandir menú' : 'Colapsar menú'}
+            title={colapsado ? 'Expandir menú' : 'Colapsar menú'}
           >
-            {colapsado ? '→' : '←'}
+            <IconoPanel />
           </button>
         </div>
 
-        <nav style={{ flex: 1, padding: '12px 8px' }}>
-          {menuItems.map(item => (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              style={{
-                width: '100%', padding: '10px 12px',
-                display: 'flex', alignItems: 'center', gap: '10px',
-                background: location.pathname === item.path ? '#2563eb' : 'transparent',
-                border: 'none', borderRadius: '8px',
-                color: location.pathname === item.path ? 'white' : '#94a3b8',
-                cursor: 'pointer', fontSize: '14px',
-                marginBottom: '4px', textAlign: 'left'
-              }}
-            >
-              <span style={{ fontSize: '16px', flexShrink: 0 }}>{item.icon}</span>
-              {!colapsado && <span>{item.label}</span>}
-            </button>
-          ))}
+        <nav className="lateral__nav" aria-label="Principal">
+          {menuItems.map(({ path, label, Icono }) => {
+            const activo = location.pathname === path;
+            return (
+              <button
+                key={path}
+                type="button"
+                className={`lateral__item ${activo ? 'lateral__item--activo' : ''}`}
+                onClick={() => navigate(path)}
+                aria-current={activo ? 'page' : undefined}
+                title={colapsado ? label : undefined}
+              >
+                <Icono />
+                {!colapsado && <span>{label}</span>}
+              </button>
+            );
+          })}
         </nav>
 
-        <div style={{
-          padding: '16px', borderTop: '1px solid #334155'
-        }}>
-          {!colapsado && (
-            <p style={{ color: '#64748b', fontSize: '12px', margin: '0 0 8px' }}>
-              {encargado?.nombre}
-            </p>
+        <div className="lateral__pie">
+          {!colapsado && encargado?.nombre && (
+            <p className="lateral__usuario">{encargado.nombre}</p>
           )}
           <button
+            type="button"
+            className="lateral__item lateral__item--salir"
             onClick={handleLogout}
-            style={{
-              width: '100%', padding: '8px',
-              borderRadius: '8px', border: '1px solid #475569',
-              background: 'transparent', color: '#94a3b8',
-              cursor: 'pointer', fontSize: '13px'
-            }}
+            title={colapsado ? 'Cerrar sesión' : undefined}
           >
-            {colapsado ? '↩' : 'Cerrar sesión'}
+            <IconoSalir />
+            {!colapsado && <span>Cerrar sesión</span>}
           </button>
         </div>
-      </div>
+      </aside>
 
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        {children}
-      </div>
+      <main className="contenido">{children}</main>
     </div>
   );
 };

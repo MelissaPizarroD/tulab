@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { registroAccesoService } from '../../services/registroAccesoService';
 import { sesionEquipoService } from '../../services/sesionEquipoService';
+import { obtenerIp } from '../utils/obtenerIp';
 
 export const sincronizacionController = {
 
@@ -8,13 +9,15 @@ export const sincronizacionController = {
     try {
       const { registros } = req.body;
       const resultados = [];
+      const ip_origen = obtenerIp(req);
 
       for (const registro of registros) {
         try {
           const resultado = await registroAccesoService.registrarEntrada({
             codigo: registro.codigo,
             id_dispositivo: registro.id_dispositivo,
-            origen_registro: registro.origen_registro
+            origen_registro: registro.origen_registro,
+            ip_origen
           });
           resultados.push({ exito: true, id_local: registro.id_local, registro: resultado });
         } catch (error: any) {
@@ -32,13 +35,15 @@ export const sincronizacionController = {
     try {
       const { sesiones } = req.body;
       const resultados = [];
+      const ip_origen = obtenerIp(req);
 
       for (const sesion of sesiones) {
         try {
           const resultado = await sesionEquipoService.iniciarSesion({
             codigo: sesion.codigo,
             id_equipo: sesion.id_equipo,
-            id_dispositivo: sesion.id_dispositivo
+            id_dispositivo: sesion.id_dispositivo.
+            ip_origen
           });
           resultados.push({ exito: true, id_local: sesion.id_local, sesion: resultado });
         } catch (error: any) {

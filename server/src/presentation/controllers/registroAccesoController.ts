@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import { registroAccesoService } from '../../services/registroAccesoService';
+import { obtenerIp } from '../utils/obtenerIp';
 
 export const registroAccesoController = {
 
   async registrarEntrada(req: Request, res: Response) {
     try {
-      const registro = await registroAccesoService.registrarEntrada(req.body);
+      const registro = await registroAccesoService.registrarEntrada({ ...req.body, ip_origen: obtenerIp(req) });
       res.status(201).json(registro);
     } catch (error: any) {
       res.status(400).json({ mensaje: error.message });

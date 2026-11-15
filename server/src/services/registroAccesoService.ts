@@ -10,6 +10,7 @@ export const registroAccesoService = {
     codigo: string;
     id_dispositivo?: number;
     origen_registro: string;
+    ip_origen?: string;
   }) {
     const turno = await turnoRepository.obtenerTurnoActivo();
     if (!turno) {
@@ -42,7 +43,8 @@ export const registroAccesoService = {
       id_visitante,
       id_turno: turno.id_turno,
       id_dispositivo: data.id_dispositivo,
-      origen_registro: data.origen_registro
+      origen_registro: data.origen_registro,
+      ip_origen: data.ip_origen
     });
 
     emitirEvento('entrada_registrada', registro);

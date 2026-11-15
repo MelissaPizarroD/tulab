@@ -11,6 +11,7 @@ export const sesionEquipoService = {
     codigo: string;
     id_equipo: number;
     id_dispositivo: number;
+    ip_origen?: string;
   }) {
     const turno = await turnoRepository.obtenerTurnoActivo();
     if (!turno) {
@@ -43,7 +44,8 @@ export const sesionEquipoService = {
     const sesion = await sesionEquipoRepository.crear({
       id_registro: registro.id_registro,
       id_equipo: data.id_equipo,
-      id_dispositivo: data.id_dispositivo
+      id_dispositivo: data.id_dispositivo,
+      ip_origen: data.ip_origen
     });
 
     emitirEvento('sesion_iniciada', sesion);

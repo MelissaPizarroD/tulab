@@ -8,11 +8,13 @@ export const registroAccesoRepository = {
     id_turno: number;
     id_dispositivo?: number;
     origen_registro: string;
+    ip_origen?: string
   }) {
     const result = await pool.query(
-      `INSERT INTO registro_acceso (codigo_estudiantil, id_visitante, id_turno, id_dispositivo, hora_entrada, origen_registro, estado)
-       VALUES ($1, $2, $3, $4, NOW(), $5, 'activo') RETURNING *`,
-      [data.codigo_estudiantil || null, data.id_visitante || null, data.id_turno, data.id_dispositivo || null, data.origen_registro]
+      `INSERT INTO registro_acceso
+        (codigo_estudiantil, id_visitante, id_turno, id_dispositivo, hora_entrada, origen_registro, ip_origen, estado)
+      VALUES ($1, $2, $3, $4, NOW(), $5, $6, 'activo') RETURNING *`,
+      [data.codigo_estudiantil || null, data.id_visitante || null, data.id_turno, data.id_dispositivo || null, data.origen_registro, data.ip_origen || null]
     );
     return result.rows[0];
   },
