@@ -7,6 +7,7 @@ import { VisitantesActivos } from '../components/VisitantesActivos';
 import { ModalCierreTurno } from '../components/ModalCierreTurno';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { ModalAperturaTurno } from '../components/ModalAperturaTurno';
 
 interface Turno {
   id_turno: number;
@@ -20,8 +21,7 @@ interface Turno {
 export const TurnoPage = () => {
   const [turno, setTurno] = useState<Turno | null>(null);
   const [cargando, setCargando] = useState(true);
-  const [abriendo, setAbriendo] = useState(false);
-  const [errorApertura, setErrorApertura] = useState('');
+  const [abriendoTurno, setAbriendoTurno] = useState(false);
   const [cerrandoTurno, setCerrandoTurno] = useState(false);
   const { encargado } = useAuth();
 
@@ -40,21 +40,9 @@ export const TurnoPage = () => {
     cargarTurno();
   }, []);
 
-  const handleAbrirTurno = async () => {
-    if (!encargado) return;
-    setAbriendo(true);
-    setErrorApertura('');
-    try {
-      await api.post('/api/turnos', {
-        id_encargado_apertura: encargado.id_encargado,
-        observaciones_apertura: ''
-      });
-      await cargarTurno();
-    } catch (e: any) {
-      setErrorApertura(e.response?.data?.mensaje || 'No se pudo abrir el turno.');
-    } finally {
-      setAbriendo(false);
-    }
+  const alAbrirTurno = async () => {
+    setAbriendoTurno(false);
+    await cargarTurno();
   };
 
   const alCerrarTurno = async () => {
@@ -93,15 +81,14 @@ export const TurnoPage = () => {
               </button>
             </>
           ) : (
-            <>
-              <div className="estado-turno__info">
-                <span className="insignia insignia--neutra">Sin turno activo</span>
-                {errorApertura && <p className="error-texto" role="alert">{errorApertura}</p>}
-              </div>
-              <button type="button" className="btn btn--primario" onClick={handleAbrirTurno} disabled={abriendo}>
-                {abriendo ? 'Abriendo...' : 'Abrir turno'}
-              </button>
-            </>
+          <>
+            <div className="estado-turno__info">
+              <span className="insignia insignia--neutra">Sin turno activo</span>
+            </div>
+            <button type="button" className="btn btn--primario" onClick={() => setAbriendoTurno(true)}>
+              Abrir turno
+            </button>
+          </>
           )}
         </section>
 
@@ -131,6 +118,15 @@ export const TurnoPage = () => {
           onConfirmado={alCerrarTurno}
         />
       )}
+
+    {abriendoTurno && encargado && (
+      <ModalAperturaTurno
+        id_encargado={encargado.id_encargado}
+        nombre_encargado={encargado.nombre}
+        onCerrar={() => setAbriendoTurno(false)}
+        onConfirmado={alAbrirTurno}
+      />
+    )}
     </Layout>
   );
 };

@@ -288,3 +288,12 @@ textarea.entrada { resize: vertical; }
 .barra { flex: 1; height: 10px; background: var(--neutro-100); border-radius: 5px; overflow: hidden; }
 .barra span { display: block; height: 100%; background: var(--dorado-500); }
 .barra-valor { font-size: 12px; color: var(--neutro-500); min-width: 140px; text-align: right; }
+
+/* ===== Acceso ===== */
+.acceso { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; background: var(--neutro-50); }
+.acceso__tarjeta { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 16px; padding: 36px 32px; background: var(--neutro-0); border: 1px solid var(--neutro-200); border-top: 4px solid var(--dorado-500); border-radius: 16px; box-shadow: 0 8px 28px rgba(26, 26, 26, 0.06); }
+.acceso__logo { height: 48px; width: auto; max-width: 180px; align-self: flex-start; margin-bottom: 4px; }
+.acceso__titulo { margin: 0; font-size: 22px; color: var(--neutro-800); }
+.acceso__subtitulo { margin: -8px 0 4px; font-size: 14px; color: var(--neutro-500); }
+.acceso__boton { margin-top: 4px; padding: 12px 18px; font-size: 15px; }
+.acceso__pie { margin: 0; font-size: 12px; color: var(--neutro-500); }

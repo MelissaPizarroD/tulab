@@ -71,7 +71,7 @@ export const ModalCierreTurno = ({ id_turno, id_encargado, onCerrar, onConfirmad
           rows={3}
           value={observaciones}
           onChange={(e) => setObservaciones(e.target.value)}
-          placeholder="Novedades o pendientes para el siguiente turno"
+          placeholder="Notas para el siguiente turno"
         />
       </label>
 

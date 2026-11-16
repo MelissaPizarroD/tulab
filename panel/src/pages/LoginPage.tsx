@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/tulab_logo.svg';
 
 export const LoginPage = () => {
   const [codigo, setCodigo] = useState('');
@@ -10,87 +11,62 @@ export const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    if (!codigo || !contrasena) {
-      setError('Ingresa tu código y contraseña');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!codigo.trim() || !contrasena) {
+      setError('Ingresa tu código y contraseña.');
       return;
     }
     setCargando(true);
     setError('');
     try {
-      await login(codigo, contrasena);
+      await login(codigo.trim(), contrasena);
       navigate('/dashboard');
     } catch {
-      setError('Credenciales inválidas');
+      setError('Código o contraseña incorrectos.');
     } finally {
       setCargando(false);
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex',
-      alignItems: 'center', justifyContent: 'center',
-      background: '#f8fafc'
-    }}>
-      <div style={{
-        background: 'white', borderRadius: '12px',
-        padding: '48px', width: '360px',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08)'
-      }}>
-        <h1 style={{ marginTop: 0, marginBottom: '8px', color: '#1e293b' }}>
-          TuLab
-        </h1>
-        <p style={{ color: '#64748b', marginBottom: '32px' }}>
-          Panel Administrativo
-        </p>
+    <main className="acceso">
+      <form className="acceso__tarjeta" onSubmit={handleLogin} noValidate>
+        <img className="acceso__logo" src={logo} alt="TuLab" />
+        <h1 className="acceso__titulo">Panel administrativo</h1>
+        <p className="acceso__subtitulo">Ingresa con tu cuenta de encargado.</p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <label className="campo">
+          <span className="campo__etiqueta">Código de identificación</span>
           <input
+            className="entrada"
             type="text"
-            placeholder="Código de identificación"
+            autoComplete="username"
+            autoFocus
             value={codigo}
-            onChange={e => setCodigo(e.target.value)}
-            style={{
-              padding: '12px 16px', fontSize: '16px',
-              borderRadius: '8px', border: '1px solid #e2e8f0',
-              outline: 'none'
-            }}
+            onChange={(e) => setCodigo(e.target.value)}
           />
+        </label>
+
+        <label className="campo">
+          <span className="campo__etiqueta">Contraseña</span>
           <input
+            className="entrada"
             type="password"
-            placeholder="Contraseña"
+            autoComplete="current-password"
             value={contrasena}
-            onChange={e => setContrasena(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleLogin()}
-            style={{
-              padding: '12px 16px', fontSize: '16px',
-              borderRadius: '8px', border: '1px solid #e2e8f0',
-              outline: 'none'
-            }}
+            onChange={(e) => setContrasena(e.target.value)}
           />
+        </label>
 
-          {error && (
-            <p style={{ color: '#dc2626', fontSize: '14px', margin: 0 }}>
-              {error}
-            </p>
-          )}
+        {error && <p className="error-texto" role="alert">{error}</p>}
 
-          <button
-            onClick={handleLogin}
-            disabled={cargando}
-            style={{
-              padding: '12px', fontSize: '16px',
-              borderRadius: '8px', border: 'none',
-              background: cargando ? '#94a3b8' : '#2563eb',
-              color: 'white', cursor: cargando ? 'default' : 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            {cargando ? 'Ingresando...' : 'Ingresar'}
-          </button>
-        </div>
-      </div>
-    </div>
+        <button type="submit" className="btn btn--primario acceso__boton" disabled={cargando}>
+          {cargando ? 'Ingresando...' : 'Ingresar'}
+        </button>
+      </form>
+
+      <p className="acceso__pie">Laboratorio de Informática · Universidad de Cartagena</p>
+    </main>
   );
 };
