@@ -40,11 +40,13 @@ export const turnoRepository = {
     return result.rows[0];
   },
 
-  async obtenerHistorico(filtros: { fecha?: string }) {
+  async obtenerHistorico(filtros: { desde?: string; hasta?: string }) {
     let query = `
       SELECT t.*,
+            to_char(t.fecha_apertura, 'YYYY-MM-DD') AS fecha_turno,
             e.nombre AS nombre_encargado_apertura,
-            ec.nombre AS nombre_encargado_cierre
+            ec.nombre AS nombre_encargado_cierre,
+            (SELECT COUNT(*)::int FROM registro_acceso ra WHERE ra.id_turno = t.id_turno) AS total_registros
       FROM turno t
       JOIN encargado e ON t.id_encargado_apertura = e.id_encargado
       LEFT JOIN encargado ec ON t.id_encargado_cierre = ec.id_encargado
@@ -53,12 +55,16 @@ export const turnoRepository = {
     const params: any[] = [];
     let i = 1;
 
-    if (filtros.fecha) {
-      query += ` AND t.fecha_apertura = $${i++}`;
-      params.push(filtros.fecha);
+    if (filtros.desde) {
+      query += ` AND t.fecha_apertura >= $${i++}`;
+      params.push(filtros.desde);
+    }
+    if (filtros.hasta) {
+      query += ` AND t.fecha_apertura <= $${i++}`;
+      params.push(filtros.hasta);
     }
 
-    query += ' ORDER BY t.fecha_apertura DESC, t.hora_apertura DESC LIMIT 50';
+    query += ' ORDER BY t.fecha_apertura DESC, t.hora_apertura DESC LIMIT 200';
 
     const result = await pool.query(query, params);
     return result.rows;

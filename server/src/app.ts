@@ -20,6 +20,8 @@ import sincronizacionRoutes from './presentation/routes/sincronizacionRoutes';
 import equipoRoutes from './presentation/routes/equipoRoutes';
 import { visitanteService } from './services/visitanteService';
 import visitanteRoutes from './presentation/routes/visitanteRoutes';
+import reporteRoutes from './presentation/routes/reporteRoutes';
+
 import path from 'path';
 
 const app = express();
@@ -63,6 +65,8 @@ app.use('/terminal', (_req, res) =>
 app.use('/panel', express.static(path.join(raiz, 'panel/dist')));
 app.use('/panel', (_req, res) =>
   res.sendFile(path.join(raiz, 'panel/dist/index.html')));
+
+app.use('/api/reportes', reporteRoutes);
 
 app.get('/', (_req, res) => res.redirect('/panel'));
 

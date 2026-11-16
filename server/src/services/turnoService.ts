@@ -1,6 +1,9 @@
 import { turnoRepository } from '../infrastructure/repositories/turnoRepository';
 import { registroAccesoRepository } from '../infrastructure/repositories/registroAccesoRepository';
 import { sesionEquipoRepository } from '../infrastructure/repositories/sesionEquipoRepository';
+import { bitacoraRepository } from '../infrastructure/repositories/bitacoraRepository';
+import { novedadEquipoRepository } from '../infrastructure/repositories/novedadEquipoRepository';
+import { programacionRecursoRepository } from '../infrastructure/repositories/programacionRecursoRepository';
 
 export const turnoService = {
 
@@ -57,8 +60,17 @@ export const turnoService = {
     });
   },
 
-  async obtenerHistorico(filtros: { fecha?: string }) {
+  async obtenerHistorico(filtros: { desde?: string; hasta?: string }) {
     return await turnoRepository.obtenerHistorico(filtros);
+  },
+
+  async obtenerDetalle(id_turno: number) {
+    const [bitacora, novedades, programaciones] = await Promise.all([
+      bitacoraRepository.obtenerPorTurno(id_turno),
+      novedadEquipoRepository.obtenerPorTurno(id_turno),
+      programacionRecursoRepository.obtenerPorTurno(id_turno)
+    ]);
+    return { bitacora, novedades, programaciones };
   }
 
 };

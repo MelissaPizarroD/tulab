@@ -85,8 +85,16 @@ export const registroAccesoService = {
     return await registroAccesoRepository.obtenerActivosPorTurno(id_turno);
   },
 
-  async obtenerHistorico(filtros: { fecha?: string; codigo?: string }) {
-  return await registroAccesoRepository.obtenerHistorico(filtros);
+  async obtenerHistorico(filtros: {
+    desde?: string;
+    hasta?: string;
+    q?: string;
+    tipo?: string;
+    id_turno?: number;
+    limit?: number;
+    offset?: number;
+  }) {
+    return await registroAccesoRepository.obtenerHistorico(filtros);
   }
 
 };
