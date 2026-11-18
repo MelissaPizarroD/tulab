@@ -14,7 +14,7 @@ export const sincronizarPendientes = async () => {
     });
 
     for (const resultado of response.data.resultados) {
-      if (resultado.exito) {
+      if (resultado.exito || resultado.descartar) {
         await db.delete('registros_pendientes', resultado.id_local);
       }
     }

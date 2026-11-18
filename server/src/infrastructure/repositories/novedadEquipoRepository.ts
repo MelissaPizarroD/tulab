@@ -6,11 +6,12 @@ export const novedadEquipoRepository = {
     id_sesion: number;
     id_equipo: number;
     descripcion: string;
+    timestamp_reporte?: string;
   }) {
     const result = await pool.query(
       `INSERT INTO novedad_equipo (id_sesion, id_equipo, descripcion, timestamp_reporte)
-       VALUES ($1, $2, $3, NOW()) RETURNING *`,
-      [data.id_sesion, data.id_equipo, data.descripcion]
+      VALUES ($1, $2, $3, COALESCE($4::timestamptz, NOW())) RETURNING *`,
+      [data.id_sesion, data.id_equipo, data.descripcion, data.timestamp_reporte || null]
     );
     return result.rows[0];
   },

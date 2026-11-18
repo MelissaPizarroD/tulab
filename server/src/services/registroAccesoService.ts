@@ -1,4 +1,5 @@
 import { registroAccesoRepository } from '../infrastructure/repositories/registroAccesoRepository';
+import { sesionEquipoRepository } from '../infrastructure/repositories/sesionEquipoRepository';
 import { turnoRepository } from '../infrastructure/repositories/turnoRepository';
 import { estudianteService } from './estudianteService';
 import { emitirEvento } from '../infrastructure/realtime/socketServer';
@@ -11,6 +12,7 @@ export const registroAccesoService = {
     id_dispositivo?: number;
     origen_registro: string;
     ip_origen?: string;
+    hora_entrada?: string;
   }) {
     const turno = await turnoRepository.obtenerTurnoActivo();
     if (!turno) {
@@ -44,7 +46,8 @@ export const registroAccesoService = {
       id_turno: turno.id_turno,
       id_dispositivo: data.id_dispositivo,
       origen_registro: data.origen_registro,
-      ip_origen: data.ip_origen
+      ip_origen: data.ip_origen,
+      hora_entrada: data.hora_entrada
     });
 
     emitirEvento('entrada_registrada', registro);
@@ -54,6 +57,7 @@ export const registroAccesoService = {
 
   async registrarSalida(data: {
     codigo: string;
+    hora_salida?: string
   }) {
     const turno = await turnoRepository.obtenerTurnoActivo();
     if (!turno) {
@@ -74,7 +78,21 @@ export const registroAccesoService = {
       throw new Error('No se encontró una entrada activa para este código');
     }
 
-    const registroActualizado = await registroAccesoRepository.registrarSalida(registro.id_registro);
+    // Si tiene una sesión abierta en un equipo, se cierra al salir por la terminal
+    const sesionActiva = await sesionEquipoRepository.buscarActivaPorRegistro(registro.id_registro);
+    if (sesionActiva) {
+      const sesionCerrada = await sesionEquipoRepository.cerrar(
+        sesionActiva.id_sesion,
+        'salida_terminal',
+        data.hora_salida
+      );
+      emitirEvento('sesion_cerrada', sesionCerrada);
+    }
+
+    const registroActualizado = await registroAccesoRepository.registrarSalida(
+      registro.id_registro,
+      data.hora_salida
+    );
 
     emitirEvento('salida_registrada', registroActualizado);
 

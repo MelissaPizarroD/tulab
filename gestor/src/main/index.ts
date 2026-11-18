@@ -42,11 +42,15 @@ let sesionActiva = false;
 const bloquear = () => {
   if (!mainWindow || isDev) return;
   sesionActiva = false;
+  // Si estaba minimizada hay que restaurarla antes de bloquear
+  if (mainWindow.isMinimized()) mainWindow.restore();
   mainWindow.setMinimizable(false);
   mainWindow.setAlwaysOnTop(true, 'screen-saver');
   mainWindow.setKiosk(true);
   mainWindow.show();
   mainWindow.focus();
+  mainWindow.moveTop();
+  mainWindow.webContents.invalidate();
 };
 
 // Con sesion valida: se libera y se minimiza a la barra de tareas

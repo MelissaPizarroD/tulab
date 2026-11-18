@@ -7,6 +7,7 @@ export const novedadEquipoService = {
 async reportar(data: {
   id_equipo: number;
   descripcion: string;
+  timestamp_reporte?: string;
 }) {
   const turno = await turnoRepository.obtenerTurnoActivo();
   if (!turno) {
@@ -21,7 +22,8 @@ async reportar(data: {
   return await novedadEquipoRepository.crear({
     id_sesion: sesionActiva.id_sesion,
     id_equipo: data.id_equipo,
-    descripcion: data.descripcion
+    descripcion: data.descripcion,
+    timestamp_reporte: data.timestamp_reporte
   });
 },
 

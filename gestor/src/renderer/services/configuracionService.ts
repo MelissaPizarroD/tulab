@@ -17,3 +17,29 @@ export const obtenerConfiguracion = async (clave: string): Promise<string | null
     return config?.valor || null;
   }
 };
+
+export const cargarDispositivoLocal = async () => {
+  const db = await getDB();
+  const equipo = await db.get('configuracion', 'id_equipo');
+  const dispositivo = await db.get('configuracion', 'id_dispositivo');
+  const numero = await db.get('configuracion', 'numero_equipo');
+
+  if (!equipo || !dispositivo) return null;
+
+  return {
+    idEquipo: Number(equipo.valor),
+    idDispositivo: Number(dispositivo.valor),
+    numeroEquipo: numero ? Number(numero.valor) : null
+  };
+};
+
+export const guardarDispositivoLocal = async (
+  idEquipo: number,
+  idDispositivo: number,
+  numeroEquipo: number
+) => {
+  const db = await getDB();
+  await db.put('configuracion', { clave: 'id_equipo', valor: String(idEquipo) });
+  await db.put('configuracion', { clave: 'numero_equipo', valor: String(numeroEquipo) });
+  await db.put('configuracion', { clave: 'id_dispositivo', valor: String(idDispositivo) });
+};

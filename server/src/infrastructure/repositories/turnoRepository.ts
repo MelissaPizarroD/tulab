@@ -68,6 +68,15 @@ export const turnoRepository = {
 
     const result = await pool.query(query, params);
     return result.rows;
-  }
+  },
+
+  async horaEsAnteriorAlTurno(id_turno: number, hora: string): Promise<boolean> {
+    const result = await pool.query(
+      `SELECT ($2::timestamptz AT TIME ZONE 'America/Bogota') < (fecha_apertura + hora_apertura) AS anterior
+      FROM turno WHERE id_turno = $1`,
+      [id_turno, hora]
+    );
+    return result.rows[0]?.anterior === true;
+  },
 
 };

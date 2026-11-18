@@ -55,7 +55,7 @@ export const cerrarSesion = async (id_equipo: number, motivo_cierre: string) => 
       id_equipo,
       motivo_cierre,
       hora_cierre: new Date().toISOString(),
-      tipo: 'cierre',
+      tipo: 'inicio',
       sincronizado: false
     });
     return { exito: true, datos: null, offline: true };
@@ -89,4 +89,10 @@ export const reportarNovedad = async (id_equipo: number, descripcion: string) =>
     });
     return { exito: true, datos: null, offline: true };
   }
+};
+
+export const hayPendientesDeSesion = async (): Promise<boolean> => {
+  const db = await getDB();
+  const pendientes = await db.getAll('sesiones_pendientes');
+  return pendientes.length > 0;
 };

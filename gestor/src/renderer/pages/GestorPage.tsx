@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TecladoNumerico } from '../components/TecladoNumerico';
 import { NovedadModal } from '../components/NovedadModal';
 import { IndicadorConexion } from '../components/IndicadorConexion';
 import { ResultadoOperacion } from '../components/ResultadoOperacion';
-import { iniciarSesion, cerrarSesion } from '../services/sesionService';
-import { obtenerConfiguracion } from '../services/configuracionService';
-import { useConexion } from '../hooks/useConexion';
+import { iniciarSesion, cerrarSesion, hayPendientesDeSesion } from '../services/sesionService';import { useConexion } from '../hooks/useConexion';
 import { api, urlServidor } from '../services/api';
-import { getDB } from '../db/database';
 import logo from '../assets/tulab_logo.svg';
 import '../styles/gestor.css';
+import {
+  obtenerConfiguracion,
+  cargarDispositivoLocal,
+  guardarDispositivoLocal
+} from '../services/configuracionService';
 
 declare global {
   interface Window {
@@ -54,13 +56,33 @@ export const GestorPage = () => {
   const [configurando, setConfigurando] = useState(false);
   const [errorConfig, setErrorConfig] = useState('');
 
+  const estadoSesionRef = useRef<EstadoSesion>('sin_sesion');
+  estadoSesionRef.current = estadoSesion;
+
   useEffect(() => {
     if (!idDispositivo) return;
 
-    const latido = () => {
-      api.post(`/api/dispositivos/${idDispositivo}/heartbeat`).catch(() => {});
-    };
+  const latido = async () => {
+    try {
+      const response = await api.post(`/api/dispositivos/${idDispositivo}/heartbeat`);
 
+      // El servidor cerró la sesión (por ejemplo, salida registrada en la terminal)
+      if (
+        estadoSesionRef.current === 'con_sesion' &&
+        response.data.sesion_activa === false &&
+        !(await hayPendientesDeSesion())
+      ) {
+        setEstadoSesion('sin_sesion');
+        setResultado({
+          tipo: 'exito',
+          titulo: 'Sesión finalizada',
+          mensaje: 'Tu sesión se cerró porque registraste tu salida del laboratorio.'
+        });
+      }
+    } catch {
+      // sin conexión: se intentará en el próximo latido
+    }
+  };
     latido();
     const intervalo = setInterval(latido, 30000);
     return () => clearInterval(intervalo);
@@ -68,15 +90,11 @@ export const GestorPage = () => {
 
   useEffect(() => {
     const cargarDispositivo = async () => {
-      const db = await getDB();
-      const equipo = await db.get('configuracion', 'id_equipo');
-      const dispositivo = await db.get('configuracion', 'id_dispositivo');
-      const numero = await db.get('configuracion', 'numero_equipo');
-
-      if (equipo && dispositivo) {
-        setIdEquipo(Number(equipo.valor));
-        setIdDispositivo(Number(dispositivo.valor));
-        if (numero) setNumeroEquipo(Number(numero.valor));
+      const local = await cargarDispositivoLocal();
+      if (local) {
+        setIdEquipo(local.idEquipo);
+        setIdDispositivo(local.idDispositivo);
+        if (local.numeroEquipo) setNumeroEquipo(local.numeroEquipo);
       }
     };
     cargarDispositivo();
@@ -137,10 +155,7 @@ export const GestorPage = () => {
       });
       const idEq = response.data.id_equipo;
       const idDisp = response.data.id_dispositivo;
-      const db = await getDB();
-      await db.put('configuracion', { clave: 'id_equipo', valor: String(idEq) });
-      await db.put('configuracion', { clave: 'numero_equipo', valor: String(numero) });
-      await db.put('configuracion', { clave: 'id_dispositivo', valor: String(idDisp) });
+      await guardarDispositivoLocal(idEq, idDisp, numero);
       setIdEquipo(idEq);
       setNumeroEquipo(numero);
       setIdDispositivo(idDisp);

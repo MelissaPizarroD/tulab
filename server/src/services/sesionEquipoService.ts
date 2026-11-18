@@ -12,6 +12,7 @@ export const sesionEquipoService = {
     id_equipo: number;
     id_dispositivo: number;
     ip_origen?: string;
+    hora_inicio?: string;
   }) {
     const turno = await turnoRepository.obtenerTurnoActivo();
     if (!turno) {
@@ -45,7 +46,8 @@ export const sesionEquipoService = {
       id_registro: registro.id_registro,
       id_equipo: data.id_equipo,
       id_dispositivo: data.id_dispositivo,
-      ip_origen: data.ip_origen
+      ip_origen: data.ip_origen,
+      hora_inicio: data.hora_inicio
     });
 
     emitirEvento('sesion_iniciada', sesion);
@@ -56,14 +58,18 @@ export const sesionEquipoService = {
   async cerrarSesion(data: {
     id_equipo: number;
     motivo_cierre: string;
+    hora_cierre?: string;
   }) {
     const sesion = await sesionEquipoRepository.buscarActivaPorEquipo(data.id_equipo);
     if (!sesion) {
       throw new Error('No hay sesión activa en este equipo');
     }
 
-    const sesionCerrada = await sesionEquipoRepository.cerrar(sesion.id_sesion, data.motivo_cierre);
-
+    const sesionCerrada = await sesionEquipoRepository.cerrar(
+      sesion.id_sesion,
+      data.motivo_cierre,
+      data.hora_cierre
+    );
     emitirEvento('sesion_cerrada', sesionCerrada);
 
     return sesionCerrada;

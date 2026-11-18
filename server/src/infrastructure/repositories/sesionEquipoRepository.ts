@@ -6,13 +6,14 @@ export const sesionEquipoRepository = {
     id_registro: number;
     id_equipo: number;
     id_dispositivo: number;
-    ip_origen?: string
+    ip_origen?: string;
+    hora_inicio?: string;
   }) {
     const result = await pool.query(
       `INSERT INTO sesion_equipo
         (id_registro, id_equipo, id_dispositivo, hora_inicio, ip_origen, estado)
-      VALUES ($1, $2, $3, NOW(), $4, 'activa') RETURNING *`,
-      [data.id_registro, data.id_equipo, data.id_dispositivo, data.ip_origen || null]
+      VALUES ($1, $2, $3, COALESCE($4::timestamptz, NOW()), $5, 'activa') RETURNING *`,
+      [data.id_registro, data.id_equipo, data.id_dispositivo, data.hora_inicio || null, data.ip_origen || null]
     );
     return result.rows[0];
   },
@@ -41,11 +42,12 @@ export const sesionEquipoRepository = {
     return result.rows[0] || null;
   },
 
-  async cerrar(id_sesion: number, motivo_cierre: string) {
+  async cerrar(id_sesion: number, motivo_cierre: string, hora_cierre?: string) {
     const result = await pool.query(
-      `UPDATE sesion_equipo SET hora_cierre = NOW(), estado = 'cerrada', motivo_cierre = $1
-       WHERE id_sesion = $2 RETURNING *`,
-      [motivo_cierre, id_sesion]
+      `UPDATE sesion_equipo
+      SET hora_cierre = COALESCE($3::timestamptz, NOW()), estado = 'cerrada', motivo_cierre = $1
+      WHERE id_sesion = $2 RETURNING *`,
+      [motivo_cierre, id_sesion, hora_cierre || null]
     );
     return result.rows[0];
   },

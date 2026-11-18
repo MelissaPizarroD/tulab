@@ -8,13 +8,22 @@ export const registroAccesoRepository = {
     id_turno: number;
     id_dispositivo?: number;
     origen_registro: string;
-    ip_origen?: string
+    ip_origen?: string;
+    hora_entrada?: string;
   }) {
     const result = await pool.query(
       `INSERT INTO registro_acceso
         (codigo_estudiantil, id_visitante, id_turno, id_dispositivo, hora_entrada, origen_registro, ip_origen, estado)
-      VALUES ($1, $2, $3, $4, NOW(), $5, $6, 'activo') RETURNING *`,
-      [data.codigo_estudiantil || null, data.id_visitante || null, data.id_turno, data.id_dispositivo || null, data.origen_registro, data.ip_origen || null]
+      VALUES ($1, $2, $3, $4, COALESCE($5::timestamptz, NOW()), $6, $7, 'activo') RETURNING *`,
+      [
+        data.codigo_estudiantil || null,
+        data.id_visitante || null,
+        data.id_turno,
+        data.id_dispositivo || null,
+        data.hora_entrada || null,
+        data.origen_registro,
+        data.ip_origen || null
+      ]
     );
     return result.rows[0];
   },
@@ -37,11 +46,12 @@ export const registroAccesoRepository = {
     return result.rows[0] || null;
   },
 
-  async registrarSalida(id_registro: number) {
+  async registrarSalida(id_registro: number, hora_salida?: string) {
     const result = await pool.query(
-      `UPDATE registro_acceso SET hora_salida = NOW(), estado = 'cerrado'
-       WHERE id_registro = $1 RETURNING *`,
-      [id_registro]
+      `UPDATE registro_acceso
+      SET hora_salida = COALESCE($2::timestamptz, NOW()), estado = 'cerrado'
+      WHERE id_registro = $1 RETURNING *`,
+      [id_registro, hora_salida || null]
     );
     return result.rows[0];
   },

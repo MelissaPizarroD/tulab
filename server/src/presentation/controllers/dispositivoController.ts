@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { dispositivoService } from '../../services/dispositivoService';
+import { sesionEquipoRepository } from '../../infrastructure/repositories/sesionEquipoRepository';
 
 export const dispositivoController = {
 
@@ -20,7 +21,14 @@ export const dispositivoController = {
     try {
       const { id } = req.params;
       const dispositivo = await dispositivoService.heartbeat(Number(id));
-      res.json(dispositivo);
+
+      let sesion_activa: boolean | undefined;
+      if (dispositivo?.id_equipo) {
+        const sesion = await sesionEquipoRepository.buscarActivaPorEquipo(dispositivo.id_equipo);
+        sesion_activa = Boolean(sesion);
+      }
+
+      res.json({ ...dispositivo, sesion_activa });
     } catch (error: any) {
       res.status(400).json({ mensaje: error.message });
     }
