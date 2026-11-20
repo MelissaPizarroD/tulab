@@ -4,7 +4,7 @@ import type { RegistroHistorico } from '../../types/historico';
 import { duracion, fechaCorta, formatHora, hoyISO, nombreOrigen } from '../../utils/formato';
 import { exportarRegistrosExcel } from '../../services/exportService';
 import { IconoBuscar, IconoChevron } from '../Iconos';
-import { DetalleBloque, Dato } from '../Detalle';
+import { DetalleBloque, Dato, FilasSesiones } from '../Detalle';
 
 const POR_PAGINA = 25;
 
@@ -187,12 +187,17 @@ export const RegistrosHistorico = () => {
                     </DetalleBloque>
 
                     <DetalleBloque titulo="Equipo">
-                      <Dato etiqueta="PC usado" valor={r.equipos ? `PC ${r.equipos}` : null} />
-                      <Dato etiqueta="IP del equipo" valor={r.ips_equipo} tecnico />
+                      {r.sesiones && r.sesiones.length > 0 ? (
+                        <FilasSesiones sesiones={r.sesiones} ahora={Date.now()} />
+                      ) : (
+                        <p className="detalle__nota">No usó ningún equipo.</p>
+                      )}
                     </DetalleBloque>
 
                     <DetalleBloque titulo="Registro">
                       <Dato etiqueta="Origen" valor={nombreOrigen(r.origen_registro)} />
+                      <Dato etiqueta="Hora de entrada" valor={formatHora(r.hora_entrada)} />
+                      <Dato etiqueta="Hora de salida" valor={r.hora_salida ? formatHora(r.hora_salida) : 'Sigue en el laboratorio'} />
                       <Dato etiqueta="IP del dispositivo" valor={r.ip_origen} tecnico />
                       <Dato etiqueta="Turno" valor={`#${r.id_turno}`} />
                       <Dato etiqueta="Encargado de apertura" valor={r.nombre_encargado_apertura} />

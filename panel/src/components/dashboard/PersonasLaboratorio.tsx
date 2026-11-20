@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import type { PersonaPresente } from '../../types/laboratorio';
 import { useAhora } from '../../hooks/useAhora';
-import { duracion, formatHora, hace, nombreOrigen } from '../../utils/formato';
+import { formatHora, hace, nombreOrigen } from '../../utils/formato';
 import { IconoBuscar, IconoChevron } from '../Iconos';
-import { DetalleBloque, Dato } from '../Detalle';
+import { DetalleBloque, Dato, FilasSesiones } from '../Detalle';
 
 type Filtro = 'todos' | 'estudiante' | 'visitante' | 'sin_equipo';
 
@@ -143,17 +143,10 @@ export const PersonasLaboratorio = ({ personas, abierto, onAbrir }: Props) => {
                     </DetalleBloque>
 
                     <DetalleBloque titulo="Equipo">
-                      {p.sesion ? (
-                        <>
-                          <Dato etiqueta="Equipo" valor={`PC ${p.sesion.numero_equipo}`} />
-                          <Dato
-                            etiqueta="Sesión iniciada"
-                            valor={`${formatHora(p.sesion.hora_inicio)} (${duracion(p.sesion.hora_inicio, ahora)})`}
-                          />
-                          <Dato etiqueta="IP del equipo" valor={p.sesion.ip_origen} tecnico />
-                        </>
+                      {r.sesiones && r.sesiones.length > 0 ? (
+                        <FilasSesiones sesiones={r.sesiones} ahora={ahora} />
                       ) : (
-                        <p className="detalle__nota">No tiene una sesión iniciada en ningún equipo.</p>
+                        <p className="detalle__nota">Todavía no ha usado ningún equipo.</p>
                       )}
                     </DetalleBloque>
 

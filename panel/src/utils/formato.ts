@@ -56,3 +56,14 @@ export const formatMinutos = (min: number | null) => {
 };
 
 export const formatHoraTexto = (hora: string | null | undefined) => (hora ? hora.slice(0, 5) : '-');
+
+export const nombreMotivoCierre = (motivo: string | null) => {
+  const nombres: Record<string, string> = {
+    manual: 'Cerrada por la persona',
+    inactividad: 'Por inactividad',
+    cierre_turno: 'Cierre de turno',
+    apagado_equipo: 'Apagado del equipo',
+    salida_terminal: 'Salida registrada en la terminal'
+  };
+  return motivo ? nombres[motivo] ?? motivo : null;
+};

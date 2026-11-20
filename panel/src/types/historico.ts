@@ -1,3 +1,5 @@
+import type { SesionRegistro } from './laboratorio';
+
 export interface RegistroHistorico {
   id_registro: number;
   id_turno: number;
@@ -24,6 +26,7 @@ export interface RegistroHistorico {
   ips_equipo: string | null;
   nombre_encargado_apertura: string;
   nombre_encargado_cierre: string | null;
+  sesiones?: SesionRegistro[];
 }
 
 export interface TurnoHistorico {
@@ -77,9 +80,14 @@ export interface SesionHistorico {
   numero_equipo: number;
   hora_inicio: string;
   hora_cierre: string | null;
+  motivo_cierre: string | null;
   ip_origen: string | null;
   id_turno: number;
   fecha_turno: string;
+  codigo_estudiantil: string | null;
+  codigo_temporal: string | null;
+  nombre_estudiante: string | null;
+  nombre_visitante: string | null;
 }
 
 export interface DatosReporte {
@@ -91,4 +99,16 @@ export interface DatosReporte {
   novedades: NovedadHistorico[];
   programaciones: ProgramacionHistorico[];
   sesiones: SesionHistorico[];
+}
+
+export interface SesionTurno {
+  id_sesion: number;
+  numero_equipo: number;
+  hora_inicio: string;
+  hora_cierre: string | null;
+  motivo_cierre: string | null;
+  ip_origen: string | null;
+  codigo_estudiantil: string | null;
+  nombre_estudiante: string | null;
+  nombre_visitante: string | null;
 }

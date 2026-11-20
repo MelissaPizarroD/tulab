@@ -5,6 +5,23 @@ import { estudianteService } from './estudianteService';
 import { emitirEvento } from '../infrastructure/realtime/socketServer';
 import { visitanteService } from './visitanteService';
 
+const adjuntarSesiones = async (registros: any[]) => {
+  if (registros.length === 0) return registros;
+
+  const sesiones = await sesionEquipoRepository.obtenerPorRegistros(
+    registros.map((r) => r.id_registro)
+  );
+
+  const porRegistro = new Map<number, any[]>();
+  for (const s of sesiones) {
+    const lista = porRegistro.get(s.id_registro);
+    if (lista) lista.push(s);
+    else porRegistro.set(s.id_registro, [s]);
+  }
+
+  return registros.map((r) => ({ ...r, sesiones: porRegistro.get(r.id_registro) ?? [] }));
+};
+
 export const registroAccesoService = {
 
   async registrarEntrada(data: {
@@ -100,7 +117,8 @@ export const registroAccesoService = {
   },
 
   async obtenerActivosPorTurno(id_turno: number) {
-    return await registroAccesoRepository.obtenerActivosPorTurno(id_turno);
+    const registros = await registroAccesoRepository.obtenerActivosPorTurno(id_turno);
+    return await adjuntarSesiones(registros);
   },
 
   async obtenerHistorico(filtros: {
@@ -112,7 +130,8 @@ export const registroAccesoService = {
     limit?: number;
     offset?: number;
   }) {
-    return await registroAccesoRepository.obtenerHistorico(filtros);
+    const { total, registros } = await registroAccesoRepository.obtenerHistorico(filtros);
+    return { total, registros: await adjuntarSesiones(registros) };
   }
 
 };

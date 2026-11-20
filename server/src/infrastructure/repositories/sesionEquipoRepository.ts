@@ -82,6 +82,39 @@ export const sesionEquipoRepository = {
        )`,
       [id_turno]
     );
-  }
+  },
+
+  async obtenerPorRegistros(ids: number[]) {
+    if (ids.length === 0) return [];
+    const result = await pool.query(
+      `SELECT se.id_registro, se.id_sesion, eq.numero_equipo,
+              se.hora_inicio, se.hora_cierre, se.motivo_cierre, se.ip_origen
+      FROM sesion_equipo se
+      JOIN equipo eq ON se.id_equipo = eq.id_equipo
+      WHERE se.id_registro = ANY($1::int[])
+      ORDER BY se.hora_inicio`,
+      [ids]
+    );
+    return result.rows;
+  },
+
+  async obtenerPorTurno(id_turno: number) {
+    const result = await pool.query(
+      `SELECT se.id_sesion, se.hora_inicio, se.hora_cierre, se.motivo_cierre, se.ip_origen,
+              eq.numero_equipo,
+              ra.codigo_estudiantil,
+              e.nombre AS nombre_estudiante,
+              v.nombre AS nombre_visitante
+      FROM sesion_equipo se
+      JOIN registro_acceso ra ON se.id_registro = ra.id_registro
+      JOIN equipo eq ON se.id_equipo = eq.id_equipo
+      LEFT JOIN estudiante e ON ra.codigo_estudiantil = e.codigo_estudiantil
+      LEFT JOIN visitante v ON ra.id_visitante = v.id_visitante
+      WHERE ra.id_turno = $1
+      ORDER BY se.hora_inicio`,
+      [id_turno]
+    );
+    return result.rows;
+  },
 
 };

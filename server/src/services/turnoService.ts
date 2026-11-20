@@ -65,12 +65,13 @@ export const turnoService = {
   },
 
   async obtenerDetalle(id_turno: number) {
-    const [bitacora, novedades, programaciones] = await Promise.all([
+    const [bitacora, novedades, programaciones, sesiones] = await Promise.all([
       bitacoraRepository.obtenerPorTurno(id_turno),
       novedadEquipoRepository.obtenerPorTurno(id_turno),
-      programacionRecursoRepository.obtenerPorTurno(id_turno)
+      programacionRecursoRepository.obtenerPorTurno(id_turno),
+      sesionEquipoRepository.obtenerPorTurno(id_turno)
     ]);
-    return { bitacora, novedades, programaciones };
+    return { bitacora, novedades, programaciones, sesiones };
   }
 
 };

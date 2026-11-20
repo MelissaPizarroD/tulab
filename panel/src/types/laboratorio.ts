@@ -16,6 +16,7 @@ export interface Registro {
   telefono: string | null;
   institucion: string | null;
   timestamp_expiracion: string | null;
+  sesiones?: SesionRegistro[];
 }
 
 export interface Sesion {
@@ -60,4 +61,13 @@ export interface EquipoLab {
   estado: EstadoEquipo;
   persona: PersonaPresente | null;
   tieneNovedad: boolean;
+}
+
+export interface SesionRegistro {
+  id_sesion: number;
+  numero_equipo: number;
+  hora_inicio: string;
+  hora_cierre: string | null;
+  motivo_cierre: string | null;
+  ip_origen: string | null;
 }

@@ -1,5 +1,5 @@
 import { reporteRepository } from '../infrastructure/repositories/reporteRepository';
-import { registroAccesoRepository } from '../infrastructure/repositories/registroAccesoRepository';
+import { registroAccesoService } from './registroAccesoService';
 
 const FECHA = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_DIAS = 370;
@@ -20,7 +20,7 @@ export const reporteService = {
 
     const [turnos, registros, bitacora, novedades, programaciones, sesiones] = await Promise.all([
       reporteRepository.turnos(desde, hasta),
-      registroAccesoRepository.obtenerHistorico({ desde, hasta, limit: 20000 }),
+      registroAccesoService.obtenerHistorico({ desde, hasta, limit: 20000 }),
       reporteRepository.bitacora(desde, hasta),
       reporteRepository.novedades(desde, hasta),
       reporteRepository.programaciones(desde, hasta),

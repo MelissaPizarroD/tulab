@@ -72,15 +72,21 @@ export const reporteRepository = {
 
   async sesiones(desde: string, hasta: string) {
     const result = await pool.query(
-      `SELECT se.id_sesion, se.hora_inicio, se.hora_cierre, se.ip_origen,
+      `SELECT se.id_sesion, se.hora_inicio, se.hora_cierre, se.motivo_cierre, se.ip_origen,
               eq.numero_equipo, ra.id_turno,
+              ra.codigo_estudiantil,
+              e.nombre AS nombre_estudiante,
+              v.nombre AS nombre_visitante,
+              v.codigo_temporal,
               to_char(t.fecha_apertura, 'YYYY-MM-DD') AS fecha_turno
-       FROM sesion_equipo se
-       JOIN registro_acceso ra ON se.id_registro = ra.id_registro
-       JOIN turno t ON ra.id_turno = t.id_turno
-       JOIN equipo eq ON se.id_equipo = eq.id_equipo
-       WHERE t.fecha_apertura BETWEEN $1 AND $2
-       ORDER BY se.hora_inicio`,
+      FROM sesion_equipo se
+      JOIN registro_acceso ra ON se.id_registro = ra.id_registro
+      JOIN turno t ON ra.id_turno = t.id_turno
+      JOIN equipo eq ON se.id_equipo = eq.id_equipo
+      LEFT JOIN estudiante e ON ra.codigo_estudiantil = e.codigo_estudiantil
+      LEFT JOIN visitante v ON ra.id_visitante = v.id_visitante
+      WHERE t.fecha_apertura BETWEEN $1 AND $2
+      ORDER BY se.hora_inicio`,
       [desde, hasta]
     );
     return result.rows;

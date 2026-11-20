@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../../services/api';
 import type {
-  EntradaBitacoraHistorico, NovedadHistorico, ProgramacionHistorico, TurnoHistorico
+  EntradaBitacoraHistorico, NovedadHistorico, ProgramacionHistorico, SesionTurno, TurnoHistorico
 } from '../../types/historico';
-import { fechaCorta, formatHora, formatHoraTexto, hoyISO } from '../../utils/formato';
+import {
+  duracion, fechaCorta, formatHora, formatHoraTexto, hoyISO, nombreMotivoCierre
+} from '../../utils/formato';
 import { exportarTurnosExcel } from '../../services/exportService';
 import { IconoChevron } from '../Iconos';
 
@@ -11,6 +13,7 @@ interface Detalle {
   bitacora: EntradaBitacoraHistorico[];
   novedades: NovedadHistorico[];
   programaciones: ProgramacionHistorico[];
+  sesiones: SesionTurno[];
 }
 
 const haceDias = (dias: number) => {
@@ -176,6 +179,33 @@ export const TurnosHistorico = () => {
                                   <span>{b.descripcion}<span className="turno__autor"> · {b.nombre_encargado}</span></span>
                                 </li>
                               ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        <div className="turno__seccion">
+                          <h3 className="detalle__titulo">Sesiones de equipos ({detalle.sesiones.length})</h3>
+                          {detalle.sesiones.length === 0 ? (
+                            <p className="turno__texto turno__texto--vacio">Sin sesiones de equipos.</p>
+                          ) : (
+                            <ul className="turno__lista">
+                              {detalle.sesiones.map((s) => {
+                                const fin = s.hora_cierre ? new Date(s.hora_cierre).getTime() : Date.now();
+                                return (
+                                  <li key={s.id_sesion}>
+                                    <span className="turno__hora">{formatHora(s.hora_inicio)}</span>
+                                    <span>
+                                      <span className="insignia insignia--equipo">PC {s.numero_equipo}</span>{' '}
+                                      {s.nombre_estudiante || s.nombre_visitante || s.codigo_estudiantil}
+                                      <span className="turno__autor">
+                                        {' '}· {s.hora_cierre ? `hasta ${formatHora(s.hora_cierre)}` : 'en curso'}
+                                        {' '}· {duracion(s.hora_inicio, fin)}
+                                        {s.hora_cierre && s.motivo_cierre ? ` · ${nombreMotivoCierre(s.motivo_cierre)}` : ''}
+                                      </span>
+                                    </span>
+                                  </li>
+                                );
+                              })}
                             </ul>
                           )}
                         </div>

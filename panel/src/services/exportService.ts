@@ -1,9 +1,9 @@
 import * as XLSX from 'xlsx';
 import logoSvg from '../assets/tulab_logo.svg?raw';
-import type { DatosReporte, RegistroHistorico, TurnoHistorico } from '../types/historico';
+import type { DatosReporte, RegistroHistorico, SesionHistorico, TurnoHistorico } from '../types/historico';
+import { fechaCorta, fechaLarga, formatMinutos, formatHoraTexto, nombreMotivoCierre } from '../utils/formato';
 import type { Estadisticas } from '../utils/estadisticas';
 import { calcularEntregas } from '../utils/estadisticas';
-import { fechaCorta, fechaLarga, formatMinutos, formatHoraTexto } from '../utils/formato';
 
 const hora = (iso: string | null) =>
   iso ? new Date(iso).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '-';
@@ -14,6 +14,35 @@ const minutos = (a: string, b: string | null) =>
 const nombreDe = (r: RegistroHistorico) => r.nombre_estudiante || r.nombre_visitante || 'Visitante';
 const codigoDe = (r: RegistroHistorico) => r.codigo_estudiantil || r.codigo_temporal || '-';
 const tipoDe = (r: RegistroHistorico) => (r.codigo_estudiantil ? 'Estudiante' : 'Visitante');
+
+const textoSesiones = (r: RegistroHistorico) =>
+  (r.sesiones ?? [])
+    .map((s) => {
+      const fin = s.hora_cierre ? hora(s.hora_cierre) : 'en curso';
+      const dur = s.hora_cierre ? ` (${formatMinutos(minutos(s.hora_inicio, s.hora_cierre))})` : '';
+      return `PC ${s.numero_equipo}: ${hora(s.hora_inicio)} a ${fin}${dur}`;
+    })
+    .join(' | ') || '-';
+
+const textoMotivos = (r: RegistroHistorico) =>
+  (r.sesiones ?? [])
+    .filter((s) => s.motivo_cierre)
+    .map((s) => nombreMotivoCierre(s.motivo_cierre))
+    .join(' | ') || '-';
+
+const filasSesiones = (sesiones: SesionHistorico[]) =>
+  sesiones.map((s) => ({
+    'Fecha': fechaCorta(s.fecha_turno),
+    'Turno': `#${s.id_turno}`,
+    'PC': s.numero_equipo,
+    'Persona': s.nombre_estudiante || s.nombre_visitante || '-',
+    'Código': s.codigo_estudiantil || s.codigo_temporal || '-',
+    'Hora inicio': hora(s.hora_inicio),
+    'Hora cierre': s.hora_cierre ? hora(s.hora_cierre) : 'En curso',
+    'Duración': formatMinutos(minutos(s.hora_inicio, s.hora_cierre)),
+    'Motivo de cierre': nombreMotivoCierre(s.motivo_cierre) || '-',
+    'IP del equipo': s.ip_origen || '-'
+  }));
 
 const hojaDesde = (datos: Record<string, any>[]) => {
   const ws = XLSX.utils.json_to_sheet(datos.length ? datos : [{ Sin_datos: '' }]);
@@ -38,6 +67,8 @@ const filasRegistros = (registros: RegistroHistorico[]) =>
     'Hora salida': hora(r.hora_salida),
     'Permanencia': formatMinutos(minutos(r.hora_entrada, r.hora_salida)),
     'PC usado': r.equipos || '-',
+    'Sesiones de equipo': textoSesiones(r),
+    'Motivo de cierre de sesión': textoMotivos(r),
     'IP del dispositivo de registro': r.ip_origen || '-',
     'IP del equipo': r.ips_equipo || '-',
     'Origen': r.origen_registro,
@@ -65,7 +96,7 @@ export const exportarRegistrosExcel = (registros: RegistroHistorico[], nombreArc
 };
 
 export const exportarTurnosExcel = (
-  datos: Pick<DatosReporte, 'turnos' | 'bitacora' | 'novedades' | 'programaciones'>,
+  datos: Pick<DatosReporte, 'turnos' | 'bitacora' | 'novedades' | 'programaciones' | 'sesiones'>,
   nombreArchivo: string
 ) => {
   const wb = XLSX.utils.book_new();
@@ -83,6 +114,8 @@ export const exportarTurnosExcel = (
     }))),
     'Bitácora'
   );
+
+  XLSX.utils.book_append_sheet(wb, hojaDesde(filasSesiones(datos.sesiones)), 'Sesiones de equipos');
 
   XLSX.utils.book_append_sheet(
     wb,
@@ -195,6 +228,8 @@ export const exportarResumenExcel = (datos: DatosReporte, est: Estadisticas, tit
     }))),
     'Recursos programados'
   );
+
+  XLSX.utils.book_append_sheet(wb, hojaDesde(filasSesiones(datos.sesiones)), 'Sesiones de equipos');
 
   XLSX.utils.book_append_sheet(
     wb,
