@@ -4,7 +4,7 @@ import type {
   EntradaBitacoraHistorico, NovedadHistorico, ProgramacionHistorico, SesionTurno, TurnoHistorico
 } from '../../types/historico';
 import {
-  duracion, fechaCorta, formatHora, formatHoraTexto, hoyISO, nombreMotivoCierre
+  duracion, fechaCorta, formatHora, formatHoraTexto, hoyISO, nombreMotivoCierre, nombreRecurso, franjaRecurso
 } from '../../utils/formato';
 import { exportarTurnosExcel } from '../../services/exportService';
 import { IconoChevron } from '../Iconos';
@@ -240,14 +240,14 @@ export const TurnosHistorico = () => {
                             <h3 className="detalle__titulo">Recursos programados ({detalle.programaciones.length})</h3>
                             <ul className="turno__lista">
                               {detalle.programaciones.map((p) => (
-                                <li key={p.id_programacion}>
-                                  <span className="turno__hora">{formatHoraTexto(p.hora_estimada_disponibilidad)}</span>
-                                  <span>
-                                    {p.nombre_estudiante || p.nombre_visitante || p.codigo_estudiantil} · {p.tipo_recurso.replace('_', ' ')}
-                                    {p.descripcion_recurso && ` · ${p.descripcion_recurso}`}
-                                    <span className="turno__autor"> · {p.estado}</span>
-                                  </span>
-                                </li>
+                              <li key={p.id_programacion}>
+                                <span className="turno__hora">{franjaRecurso(p)}</span>
+                                <span>
+                                  {p.nombre_estudiante || p.nombre_visitante || p.codigo_estudiantil} · {nombreRecurso(p)}
+                                  {p.descripcion_recurso && ` · ${p.descripcion_recurso}`}
+                                  <span className="turno__autor"> · {p.estado}</span>
+                                </span>
+                              </li>
                               ))}
                             </ul>
                           </div>

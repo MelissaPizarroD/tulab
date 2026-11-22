@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import logoSvg from '../assets/tulab_logo.svg?raw';
 import type { DatosReporte, RegistroHistorico, SesionHistorico, TurnoHistorico } from '../types/historico';
-import { fechaCorta, fechaLarga, formatMinutos, formatHoraTexto, nombreMotivoCierre } from '../utils/formato';
+import { fechaCorta, fechaLarga, formatMinutos, formatHoraTexto, nombreMotivoCierre, nombreRecurso, franjaRecurso } from '../utils/formato';
 import type { Estadisticas } from '../utils/estadisticas';
 import { calcularEntregas } from '../utils/estadisticas';
 
@@ -138,7 +138,7 @@ export const exportarTurnosExcel = (
       'Fecha': fechaCorta(p.fecha_turno || ''),
       'Turno': `#${p.id_turno}`,
       'Persona': p.nombre_estudiante || p.nombre_visitante || p.codigo_estudiantil || '-',
-      'Recurso': p.tipo_recurso.replace('_', ' '),
+      'Recurso': nombreRecurso(p),
       'Descripción': p.descripcion_recurso || '-',
       'Hora estimada': formatHoraTexto(p.hora_estimada_disponibilidad),
       'Estado': p.estado
@@ -225,9 +225,9 @@ export const exportarResumenExcel = (datos: DatosReporte, est: Estadisticas, tit
       'Fecha': fechaCorta(p.fecha_turno || ''),
       'Turno': `#${p.id_turno}`,
       'Persona': p.nombre_estudiante || p.nombre_visitante || p.codigo_estudiantil || '-',
-      'Recurso': p.tipo_recurso.replace('_', ' '),
+      'Recurso': nombreRecurso(p),
       'Descripción': p.descripcion_recurso || '-',
-      'Hora estimada': formatHoraTexto(p.hora_estimada_disponibilidad),
+      'Hora estimada': franjaRecurso(p),
       'Estado': p.estado
     }))),
     'Recursos programados'
@@ -407,8 +407,7 @@ ${tabla(
   datos.programaciones.map((p) => [
     fechaCorta(p.fecha_turno || ''),
     p.nombre_estudiante || p.nombre_visitante || p.codigo_estudiantil || '-',
-    `${p.tipo_recurso.replace('_', ' ')}${p.descripcion_recurso ? ` · ${p.descripcion_recurso}` : ''}`,
-    formatHoraTexto(p.hora_estimada_disponibilidad),
+    `${nombreRecurso(p)}${p.descripcion_recurso ? ` · ${p.descripcion_recurso}` : ''}`,    franjaRecurso(p),
     p.estado
   ]),
   'No hubo recursos programados.'

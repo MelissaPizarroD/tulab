@@ -21,6 +21,7 @@ import sincronizacionRoutes from './presentation/routes/sincronizacionRoutes';
 import equipoRoutes from './presentation/routes/equipoRoutes';
 import visitanteRoutes from './presentation/routes/visitanteRoutes';
 import reporteRoutes from './presentation/routes/reporteRoutes';
+import recursoRoutes from './presentation/routes/recursoRoutes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -43,6 +44,7 @@ app.use('/api/sesiones', sesionEquipoRoutes);
 app.use('/api/novedades', novedadEquipoRoutes);
 app.use('/api/bitacora', bitacoraRoutes);
 app.use('/api/programaciones', programacionRecursoRoutes);
+app.use('/api/recursos', recursoRoutes);
 app.use('/api/configuracion', configuracionRoutes);
 app.use('/api/sincronizacion', sincronizacionRoutes);
 app.use('/api/equipos', equipoRoutes);

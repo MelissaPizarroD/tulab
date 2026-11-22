@@ -68,7 +68,9 @@ export interface NovedadHistorico {
 export interface ProgramacionHistorico {
   id_programacion: number;
   id_turno: number;
-  tipo_recurso: string;
+  nombre_recurso: string | null;
+  tipo_recurso: string | null;
+  hora_fin: string | null;
   descripcion_recurso: string | null;
   hora_estimada_disponibilidad: string | null;
   estado: string;

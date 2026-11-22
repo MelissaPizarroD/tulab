@@ -16,7 +16,13 @@ interface Equipo {
   descripcion: string;
 }
 
-type Pestana = 'sistema' | 'equipos';
+interface Recurso {
+  id_recurso: number;
+  nombre: string;
+  activo: boolean;
+}
+
+type Pestana = 'sistema' | 'equipos' | 'recursos';
 
 const ETIQUETAS: Record<string, string> = {
   terminal_activa: 'Terminal activa',
@@ -36,16 +42,26 @@ const ESTADOS_EDITABLES = ['disponible', 'fuera_de_servicio'];
 
 const esBooleano = (valor: string) => valor === 'true' || valor === 'false';
 
+const TEXTO_PESTANA: Record<Pestana, string> = {
+  sistema: 'Parámetros del sistema',
+  equipos: 'Equipos',
+  recursos: 'Recursos'
+};
+
 export const ConfiguracionPage = () => {
   const [pestana, setPestana] = useState<Pestana>('sistema');
   const [configuraciones, setConfiguraciones] = useState<Configuracion[]>([]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
+  const [recursos, setRecursos] = useState<Recurso[]>([]);
   const [guardando, setGuardando] = useState<string | null>(null);
   const [aviso, setAviso] = useState<{ clave: string; error: boolean; texto: string } | null>(null);
   const [valores, setValores] = useState<Record<string, string>>({});
   const [nuevoEquipo, setNuevoEquipo] = useState({ numero_equipo: '', descripcion: '' });
   const [agregando, setAgregando] = useState(false);
   const [errorEquipo, setErrorEquipo] = useState('');
+  const [nuevoRecurso, setNuevoRecurso] = useState('');
+  const [agregandoRecurso, setAgregandoRecurso] = useState(false);
+  const [errorRecurso, setErrorRecurso] = useState('');
 
   const cargarConfiguraciones = async () => {
     try {
@@ -70,9 +86,19 @@ export const ConfiguracionPage = () => {
     }
   };
 
+  const cargarRecursos = async () => {
+    try {
+      const response = await api.get('/api/recursos');
+      setRecursos(response.data);
+    } catch (error) {
+      console.error('Error cargando recursos:', error);
+    }
+  };
+
   useEffect(() => {
     cargarConfiguraciones();
     cargarEquipos();
+    cargarRecursos();
   }, []);
 
   const handleGuardarConfig = async (clave: string) => {
@@ -120,6 +146,30 @@ export const ConfiguracionPage = () => {
     }
   };
 
+  const handleAgregarRecurso = async () => {
+    if (!nuevoRecurso.trim()) return;
+    setAgregandoRecurso(true);
+    setErrorRecurso('');
+    try {
+      await api.post('/api/recursos', { nombre: nuevoRecurso });
+      setNuevoRecurso('');
+      await cargarRecursos();
+    } catch (e: any) {
+      setErrorRecurso(e.response?.data?.mensaje || 'No se pudo agregar el recurso.');
+    } finally {
+      setAgregandoRecurso(false);
+    }
+  };
+
+  const handleActivoRecurso = async (id: number, activo: boolean) => {
+    try {
+      await api.patch(`/api/recursos/${id}`, { activo });
+      await cargarRecursos();
+    } catch (error) {
+      console.error('Error actualizando recurso:', error);
+    }
+  };
+
   return (
     <Layout>
       <div className="pagina pagina--angosta">
@@ -128,7 +178,7 @@ export const ConfiguracionPage = () => {
         </header>
 
         <div className="pestanas" role="tablist" aria-label="Secciones de configuración">
-          {(['sistema', 'equipos'] as const).map((p) => (
+          {(['sistema', 'equipos', 'recursos'] as const).map((p) => (
             <button
               key={p}
               type="button"
@@ -137,12 +187,12 @@ export const ConfiguracionPage = () => {
               className={`pestana ${pestana === p ? 'pestana--activa' : ''}`}
               onClick={() => setPestana(p)}
             >
-              {p === 'sistema' ? 'Parámetros del sistema' : 'Equipos'}
+              {TEXTO_PESTANA[p]}
             </button>
           ))}
         </div>
 
-        {pestana === 'sistema' ? (
+        {pestana === 'sistema' && (
           <section className="tarjeta">
             <header className="tarjeta__cabecera">
               <h2 className="tarjeta__titulo">Parámetros del sistema</h2>
@@ -212,7 +262,9 @@ export const ConfiguracionPage = () => {
               </ul>
             )}
           </section>
-        ) : (
+        )}
+
+        {pestana === 'equipos' && (
           <div className="columna">
             <section className="tarjeta">
               <header className="tarjeta__cabecera">
@@ -288,6 +340,71 @@ export const ConfiguracionPage = () => {
                       </li>
                     );
                   })}
+                </ul>
+              )}
+            </section>
+          </div>
+        )}
+
+        {pestana === 'recursos' && (
+          <div className="columna">
+            <section className="tarjeta">
+              <header className="tarjeta__cabecera">
+                <h2 className="tarjeta__titulo">Agregar recurso</h2>
+              </header>
+
+              <form
+                className="fila-formulario fila-formulario--sin-margen"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAgregarRecurso();
+                }}
+              >
+                <input
+                  type="text"
+                  className="entrada"
+                  placeholder="Nombre del recurso (ej. Auditorio)"
+                  aria-label="Nombre del recurso"
+                  value={nuevoRecurso}
+                  onChange={(e) => setNuevoRecurso(e.target.value)}
+                />
+                <button type="submit" className="btn btn--primario" disabled={agregandoRecurso || !nuevoRecurso.trim()}>
+                  {agregandoRecurso ? 'Agregando...' : 'Agregar'}
+                </button>
+              </form>
+              {errorRecurso && <p className="error-texto error-texto--arriba" role="alert">{errorRecurso}</p>}
+            </section>
+
+            <section className="tarjeta">
+              <header className="tarjeta__cabecera">
+                <h2 className="tarjeta__titulo">
+                  Recursos registrados <span className="tarjeta__conteo">{recursos.length}</span>
+                </h2>
+              </header>
+
+              {recursos.length === 0 ? (
+                <p className="vacio">No hay recursos registrados.</p>
+              ) : (
+                <ul className="lista">
+                  {recursos.map((r) => (
+                    <li key={r.id_recurso} className="elemento elemento--centrado">
+                      <div className="elemento__cuerpo">
+                        <span className="elemento__titulo">{r.nombre}</span>
+                      </div>
+                      <div className="elemento__acciones">
+                        <span className={`insignia ${r.activo ? 'insignia--activa' : 'insignia--aviso'}`}>
+                          {r.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn btn--secundario btn--chico"
+                          onClick={() => handleActivoRecurso(r.id_recurso, !r.activo)}
+                        >
+                          {r.activo ? 'Desactivar' : 'Activar'}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               )}
             </section>

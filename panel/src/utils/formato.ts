@@ -67,3 +67,9 @@ export const nombreMotivoCierre = (motivo: string | null) => {
   };
   return motivo ? nombres[motivo] ?? motivo : null;
 };
+
+export const nombreRecurso = (p: { nombre_recurso?: string | null; tipo_recurso?: string | null }) =>
+  p.nombre_recurso || (p.tipo_recurso ? p.tipo_recurso.replace('_', ' ') : 'Recurso');
+
+export const franjaRecurso = (p: { hora_estimada_disponibilidad: string | null; hora_fin?: string | null }) =>
+  `${formatHoraTexto(p.hora_estimada_disponibilidad)}${p.hora_fin ? ' a ' + formatHoraTexto(p.hora_fin) : ''}`;

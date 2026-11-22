@@ -58,11 +58,13 @@ export const reporteRepository = {
   async programaciones(desde: string, hasta: string) {
     const result = await pool.query(
       `SELECT pr.*,
+              r.nombre AS nombre_recurso,
               to_char(t.fecha_apertura, 'YYYY-MM-DD') AS fecha_turno,
               e.nombre AS nombre_estudiante,
               v.nombre AS nombre_visitante
        FROM programacion_recurso pr
        JOIN turno t ON pr.id_turno = t.id_turno
+       LEFT JOIN recurso r ON pr.id_recurso = r.id_recurso
        LEFT JOIN estudiante e ON pr.codigo_estudiantil = e.codigo_estudiantil
        LEFT JOIN visitante v ON pr.id_visitante = v.id_visitante
        WHERE t.fecha_apertura BETWEEN $1 AND $2
