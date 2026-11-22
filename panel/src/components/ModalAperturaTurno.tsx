@@ -9,7 +9,7 @@ type Props = {
   onConfirmado: () => void;
 };
 
-export const ModalAperturaTurno = ({ id_encargado, nombre_encargado, onCerrar, onConfirmado }: Props) => {
+export const ModalAperturaTurno = ({ nombre_encargado, onCerrar, onConfirmado }: Props) => {
   const [observaciones, setObservaciones] = useState('');
   const [abriendo, setAbriendo] = useState(false);
   const [error, setError] = useState('');
@@ -19,7 +19,6 @@ export const ModalAperturaTurno = ({ id_encargado, nombre_encargado, onCerrar, o
     setError('');
     try {
       await api.post('/api/turnos', {
-        id_encargado_apertura: id_encargado,
         observaciones_apertura: observaciones.trim()
       });
       onConfirmado();

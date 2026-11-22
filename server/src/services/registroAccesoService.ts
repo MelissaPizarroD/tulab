@@ -4,6 +4,7 @@ import { turnoRepository } from '../infrastructure/repositories/turnoRepository'
 import { estudianteService } from './estudianteService';
 import { emitirEvento } from '../infrastructure/realtime/socketServer';
 import { visitanteService } from './visitanteService';
+import { clasificarCodigo } from '../utils/clasificarCodigo';
 
 const adjuntarSesiones = async (registros: any[]) => {
   if (registros.length === 0) return registros;
@@ -39,8 +40,10 @@ export const registroAccesoService = {
     let codigo_estudiantil: string | undefined;
     let id_visitante: number | undefined;
 
-    if (data.codigo.length === 6 && !isNaN(Number(data.codigo))) {
-      const visitante = await visitanteService.validarCodigoTemporal(data.codigo);
+    const { tipo, codigo } = clasificarCodigo(data.codigo);
+
+    if (tipo === 'visitante') {
+      const visitante = await visitanteService.validarCodigoTemporal(codigo);
       id_visitante = visitante.id_visitante;
 
       const registroExistente = await registroAccesoRepository.buscarActivoPorVisitante(id_visitante!, turno.id_turno);
@@ -48,7 +51,7 @@ export const registroAccesoService = {
         throw new Error('El visitante ya tiene una entrada activa en este turno');
       }
     } else {
-      const estudiante = await estudianteService.validarCodigo(data.codigo);
+      const estudiante = await estudianteService.validarCodigo(codigo);
       codigo_estudiantil = estudiante.codigo_estudiantil;
 
       const registroExistente = await registroAccesoRepository.buscarActivoPorEstudiante(codigo_estudiantil!, turno.id_turno);
@@ -83,11 +86,13 @@ export const registroAccesoService = {
 
     let registro;
 
-    if (data.codigo.length === 6 && !isNaN(Number(data.codigo))) {
-      const visitante = await visitanteService.validarCodigoTemporal(data.codigo);
+    const { tipo, codigo } = clasificarCodigo(data.codigo);
+
+    if (tipo === 'visitante') {
+      const visitante = await visitanteService.validarCodigoTemporal(codigo);
       registro = await registroAccesoRepository.buscarActivoPorVisitante(visitante.id_visitante, turno.id_turno);
     } else {
-      const estudiante = await estudianteService.validarCodigo(data.codigo);
+      const estudiante = await estudianteService.validarCodigo(codigo);
       registro = await registroAccesoRepository.buscarActivoPorEstudiante(estudiante.codigo_estudiantil, turno.id_turno);
     }
 

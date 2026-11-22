@@ -9,7 +9,7 @@ type Props = {
   onConfirmado: () => void;
 };
 
-export const ModalCierreTurno = ({ id_turno, id_encargado, onCerrar, onConfirmado }: Props) => {
+export const ModalCierreTurno = ({ id_turno, onCerrar, onConfirmado }: Props) => {
   const [personas, setPersonas] = useState<number | null>(null);
   const [sesiones, setSesiones] = useState<number | null>(null);
   const [observaciones, setObservaciones] = useState('');
@@ -37,7 +37,6 @@ export const ModalCierreTurno = ({ id_turno, id_encargado, onCerrar, onConfirmad
     setError('');
     try {
       await api.patch(`/api/turnos/${id_turno}/cerrar`, {
-        id_encargado_cierre: id_encargado,
         observaciones_cierre: observaciones.trim()
       });
       onConfirmado();

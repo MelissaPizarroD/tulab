@@ -4,6 +4,7 @@ import { turnoRepository } from '../infrastructure/repositories/turnoRepository'
 import { estudianteService } from './estudianteService';
 import { emitirEvento } from '../infrastructure/realtime/socketServer';
 import { visitanteService } from './visitanteService';
+import { clasificarCodigo } from '../utils/clasificarCodigo';
 
 export const sesionEquipoService = {
 
@@ -25,11 +26,12 @@ export const sesionEquipoService = {
     }
 
     let registro;
-    if (data.codigo.length === 6 && !isNaN(Number(data.codigo))) {
-      const visitante = await visitanteService.validarCodigoTemporal(data.codigo);
+    const { tipo, codigo } = clasificarCodigo(data.codigo);
+    if (tipo === 'visitante') {
+      const visitante = await visitanteService.validarCodigoTemporal(codigo);
       registro = await registroAccesoRepository.buscarActivoPorVisitante(visitante.id_visitante, turno.id_turno);
     } else {
-      const estudiante = await estudianteService.validarCodigo(data.codigo);
+      const estudiante = await estudianteService.validarCodigo(codigo);
       registro = await registroAccesoRepository.buscarActivoPorEstudiante(estudiante.codigo_estudiantil, turno.id_turno);
     }
 

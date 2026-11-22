@@ -8,10 +8,10 @@ import {
 } from './Iconos';
 
 const menuItems = [
-  { path: '/dashboard', label: 'Dashboard', Icono: IconoDashboard },
-  { path: '/turno', label: 'Gestión de turno', Icono: IconoReloj },
-  { path: '/historicos', label: 'Históricos', Icono: IconoHistorial },
-  { path: '/configuracion', label: 'Configuración', Icono: IconoAjustes }
+  { path: '/dashboard', label: 'Dashboard', Icono: IconoDashboard, soloSala: false },
+  { path: '/turno', label: 'Gestión de turno', Icono: IconoReloj, soloSala: true },
+  { path: '/historicos', label: 'Históricos', Icono: IconoHistorial, soloSala: false },
+  { path: '/configuracion', label: 'Configuración', Icono: IconoAjustes, soloSala: true }
 ];
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -43,7 +43,9 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
         <nav className="lateral__nav" aria-label="Principal">
-          {menuItems.map(({ path, label, Icono }) => {
+          {menuItems
+            .filter((m) => !m.soloSala || encargado?.rol === 'encargado_sala')
+            .map(({ path, label, Icono }) => {
             const activo = location.pathname === path;
             return (
               <button

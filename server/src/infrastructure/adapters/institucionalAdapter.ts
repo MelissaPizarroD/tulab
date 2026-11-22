@@ -22,6 +22,14 @@ const estudiantesSimulados = [
     correo_institucional: 'l.perez@universidad.edu.co',
     semestre: 8,
     telefono_contacto: '3005555555'
+  },
+  {
+  codigo_estudiantil: '0222220004',
+  nombre: 'Estudiante de Prueba',
+  programa_academico: 'Ingeniería de Sistemas',
+  correo_institucional: 'e.prueba@universidad.edu.co',
+  semestre: 5,
+  telefono_contacto: '3000000000'
   }
 ];
 

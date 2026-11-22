@@ -2,6 +2,7 @@ import { programacionRecursoRepository } from '../infrastructure/repositories/pr
 import { turnoRepository } from '../infrastructure/repositories/turnoRepository';
 import { estudianteService } from './estudianteService';
 import { visitanteService } from './visitanteService';
+import { clasificarCodigo } from '../utils/clasificarCodigo';
 
 export const programacionRecursoService = {
 
@@ -19,11 +20,12 @@ export const programacionRecursoService = {
     let codigo_estudiantil: string | undefined;
     let id_visitante: number | undefined;
 
-    if (data.codigo.length === 6 && !isNaN(Number(data.codigo))) {
-      const visitante = await visitanteService.validarCodigoTemporal(data.codigo);
+    const { tipo, codigo } = clasificarCodigo(data.codigo);
+    if (tipo === 'visitante') {
+      const visitante = await visitanteService.validarCodigoTemporal(codigo);
       id_visitante = visitante.id_visitante;
     } else {
-      const estudiante = await estudianteService.validarCodigo(data.codigo);
+      const estudiante = await estudianteService.validarCodigo(codigo);
       codigo_estudiantil = estudiante.codigo_estudiantil;
     }
 

@@ -27,3 +27,11 @@ export const verificarToken = (req: AuthRequest, res: Response, next: NextFuncti
     res.status(401).json({ mensaje: 'Token inválido o expirado' });
   }
 };
+
+export const permitirRoles = (...roles: string[]) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.encargado || !roles.includes(req.encargado.rol)) {
+      return res.status(403).json({ mensaje: 'No tienes permiso para esta acción' });
+    }
+    next();
+  };

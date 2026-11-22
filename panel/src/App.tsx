@@ -6,10 +6,11 @@ import { HistoricosPage } from './pages/HistoricosPage';
 import { ConfiguracionPage } from './pages/ConfiguracionPage';
 import { useAuth } from './context/AuthContext';
 
-const RutaProtegida = ({ children }: { children: React.ReactNode }) => {
+const RutaProtegida = ({ children, roles }: { children: React.ReactNode; roles?: string[] }) => {
   const { encargado, cargando } = useAuth();
   if (cargando) return <div>Cargando...</div>;
   if (!encargado) return <Navigate to="/login" />;
+  if (roles && !roles.includes(encargado.rol)) return <Navigate to="/dashboard" />;
   return <>{children}</>;
 };
 
@@ -22,13 +23,13 @@ function App() {
           <RutaProtegida><DashboardPage /></RutaProtegida>
         } />
         <Route path="/turno" element={
-          <RutaProtegida><TurnoPage /></RutaProtegida>
+          <RutaProtegida roles={['encargado_sala']}><TurnoPage /></RutaProtegida>
         } />
         <Route path="/historicos" element={
           <RutaProtegida><HistoricosPage /></RutaProtegida>
         } />
         <Route path="/configuracion" element={
-          <RutaProtegida><ConfiguracionPage /></RutaProtegida>
+          <RutaProtegida roles={['encargado_sala']}><ConfiguracionPage /></RutaProtegida>
         } />
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>

@@ -2,12 +2,13 @@ process.env.TZ = 'America/Bogota';
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
+import path from 'path';
 import { initSocket } from './infrastructure/realtime/socketServer';
 import { config } from './config/env';
 import './infrastructure/database/connection';
+import { iniciarTareasProgramadas } from './infrastructure/jobs/tareasProgramadas';
 import turnoRoutes from './presentation/routes/turnoRoutes';
 import authRoutes from './presentation/routes/authRoutes';
-import { dispositivoService } from './services/dispositivoService';
 import dispositivoRoutes from './presentation/routes/dispositivoRoutes';
 import estudianteRoutes from './presentation/routes/estudianteRoutes';
 import registroAccesoRoutes from './presentation/routes/registroAccesoRoutes';
@@ -18,11 +19,8 @@ import programacionRecursoRoutes from './presentation/routes/programacionRecurso
 import configuracionRoutes from './presentation/routes/configuracionRoutes';
 import sincronizacionRoutes from './presentation/routes/sincronizacionRoutes';
 import equipoRoutes from './presentation/routes/equipoRoutes';
-import { visitanteService } from './services/visitanteService';
 import visitanteRoutes from './presentation/routes/visitanteRoutes';
 import reporteRoutes from './presentation/routes/reporteRoutes';
-
-import path from 'path';
 
 const app = express();
 const httpServer = createServer(app);
@@ -38,13 +36,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/turnos', turnoRoutes);
 app.use('/api/auth', authRoutes);
-
 app.use('/api/dispositivos', dispositivoRoutes);
-
-setInterval(async () => {
-  await dispositivoService.marcarDesconectados();
-}, 30000);
-
 app.use('/api/estudiantes', estudianteRoutes);
 app.use('/api/registros-acceso', registroAccesoRoutes);
 app.use('/api/sesiones', sesionEquipoRoutes);
@@ -55,6 +47,7 @@ app.use('/api/configuracion', configuracionRoutes);
 app.use('/api/sincronizacion', sincronizacionRoutes);
 app.use('/api/equipos', equipoRoutes);
 app.use('/api/visitantes', visitanteRoutes);
+app.use('/api/reportes', reporteRoutes);
 
 const raiz = path.resolve(__dirname, '../../');
 
@@ -66,15 +59,9 @@ app.use('/panel', express.static(path.join(raiz, 'panel/dist')));
 app.use('/panel', (_req, res) =>
   res.sendFile(path.join(raiz, 'panel/dist/index.html')));
 
-app.use('/api/reportes', reporteRoutes);
-
 app.get('/', (_req, res) => res.redirect('/panel'));
 
-const PORT = process.env.PORT || 3000;
 httpServer.listen(config.port, () => {
   console.log(`Servidor TuLab corriendo en puerto ${config.port}`);
+  iniciarTareasProgramadas();
 });
-
-setInterval(async () => {
-  await visitanteService.expirarVisitantesVencidos();
-}, 60000);
