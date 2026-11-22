@@ -26,14 +26,26 @@ export const bitacoraRepository = {
 
   async obtenerPorTurno(id_turno: number) {
     const result = await pool.query(
-      `SELECT rb.*, e.nombre AS nombre_encargado
-       FROM registro_bitacora rb
-       JOIN encargado e ON rb.id_encargado = e.id_encargado
-       WHERE rb.id_turno = $1 AND rb.estado = 'activa'
-       ORDER BY rb.timestamp_registro DESC`,
+      `SELECT rb.*, e.nombre AS nombre_encargado, ee.nombre AS nombre_editor
+      FROM registro_bitacora rb
+      JOIN encargado e ON rb.id_encargado = e.id_encargado
+      LEFT JOIN encargado ee ON rb.id_encargado_edicion = ee.id_encargado
+      WHERE rb.id_turno = $1 AND rb.estado = 'activa'
+      ORDER BY rb.timestamp_registro DESC`,
       [id_turno]
     );
     return result.rows;
+  },
+
+  async editar(id_entrada: number, id_turno: number, id_encargado: number, descripcion: string) {
+    const result = await pool.query(
+      `UPDATE registro_bitacora
+      SET descripcion = $4, id_encargado_edicion = $3, timestamp_edicion = NOW()
+      WHERE id_entrada = $1 AND id_turno = $2 AND id_encargado = $3 AND estado = 'activa'
+      RETURNING *`,
+      [id_entrada, id_turno, id_encargado, descripcion]
+    );
+    return result.rows[0] || null;
   }
 
 };

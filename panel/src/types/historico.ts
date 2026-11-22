@@ -49,6 +49,8 @@ export interface EntradaBitacoraHistorico {
   timestamp_registro: string;
   nombre_encargado: string;
   fecha_turno?: string;
+  timestamp_edicion?: string | null;
+  nombre_editor?: string | null;
 }
 
 export interface NovedadHistorico {
@@ -60,6 +62,7 @@ export interface NovedadHistorico {
   nombre_estudiante: string | null;
   codigo_estudiantil: string | null;
   fecha_turno?: string;
+  nombre_visitante: string | null;
 }
 
 export interface ProgramacionHistorico {

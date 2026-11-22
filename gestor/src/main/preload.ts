@@ -3,8 +3,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electron', {
   platform: process.platform,
   apiUrl: ipcRenderer.sendSync('get-api-url') as string,
-  setIdEquipo: (id: number) => ipcRenderer.send('set-id-equipo', id),
-  notificarSesionIniciada: (id: number) => ipcRenderer.send('sesion-iniciada', id),
+  setIdEquipo: (id: number, idDispositivo: number) => ipcRenderer.send('set-id-equipo', id, idDispositivo),
+  notificarSesionIniciada: (id: number, idDispositivo: number) => ipcRenderer.send('sesion-iniciada', id, idDispositivo),
   estadoSesion: (activa: boolean) => ipcRenderer.send('estado-sesion', activa),
   setTiempoInactividad: (minutos: number) => ipcRenderer.send('tiempo-inactividad', minutos),
   onInactividad: (callback: () => void) => {

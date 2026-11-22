@@ -34,6 +34,19 @@ export const bitacoraController = {
     } catch (error: any) {
       res.status(500).json({ mensaje: error.message });
     }
+  },
+
+  async editar(req: AuthRequest, res: Response) {
+    try {
+      const entrada = await bitacoraService.editar(
+        Number(req.params.id),
+        req.encargado!.id_encargado,
+        req.body.descripcion
+      );
+      res.json(entrada);
+    } catch (error: any) {
+      res.status(400).json({ mensaje: error.message });
+    }
   }
 
 };

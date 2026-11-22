@@ -20,7 +20,7 @@ export const NovedadesTurno = ({ novedades }: { novedades: Novedad[] }) => (
               <span className="novedad__hora">{formatHora(n.timestamp_reporte)}</span>
             </div>
             <p className="novedad__texto">{n.descripcion}</p>
-            <p className="novedad__autor">{n.nombre_estudiante || n.codigo_estudiantil}</p>
+            <p className="novedad__autor">{n.nombre_estudiante || n.nombre_visitante || n.codigo_estudiantil}</p>
           </li>
         ))}
       </ul>

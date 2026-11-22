@@ -4,9 +4,12 @@ import { useAuth } from '../context/AuthContext';
 
 interface Entrada {
   id_entrada: number;
+  id_encargado: number;
   descripcion: string;
   timestamp_registro: string;
+  timestamp_edicion: string | null;
   nombre_encargado: string;
+  nombre_editor: string | null;
   estado: string;
 }
 
@@ -14,6 +17,9 @@ export const Bitacora = ({ id_turno }: { id_turno: number }) => {
   const [entradas, setEntradas] = useState<Entrada[]>([]);
   const [nueva, setNueva] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [editando, setEditando] = useState<number | null>(null);
+  const [textoEdicion, setTextoEdicion] = useState('');
+  const [error, setError] = useState('');
   const { encargado } = useAuth();
 
   const cargarEntradas = async () => {
@@ -56,6 +62,23 @@ export const Bitacora = ({ id_turno }: { id_turno: number }) => {
     }
   };
 
+  const empezarEdicion = (e: Entrada) => {
+    setError('');
+    setEditando(e.id_entrada);
+    setTextoEdicion(e.descripcion);
+  };
+
+  const guardarEdicion = async (id: number) => {
+    setError('');
+    try {
+      await api.patch(`/api/bitacora/${id}`, { descripcion: textoEdicion });
+      setEditando(null);
+      await cargarEntradas();
+    } catch (e: any) {
+      setError(e.response?.data?.mensaje || 'No se pudo editar la entrada.');
+    }
+  };
+
   const formatHora = (fecha: string) =>
     new Date(fecha).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
 
@@ -87,25 +110,59 @@ export const Bitacora = ({ id_turno }: { id_turno: number }) => {
         </button>
       </form>
 
+      {error && <p className="error-texto" role="alert">{error}</p>}
+
       {entradas.length === 0 ? (
         <p className="vacio">No hay entradas en la bitácora.</p>
       ) : (
         <ul className="lista lista--separada">
-          {entradas.map((e) => (
-            <li key={e.id_entrada} className="elemento">
-              <div className="elemento__cuerpo">
-                <span className="elemento__titulo elemento__titulo--normal">{e.descripcion}</span>
-                <span className="elemento__detalle">
-                  {e.nombre_encargado} · {formatHora(e.timestamp_registro)}
-                </span>
-              </div>
-              <div className="elemento__acciones">
-                <button type="button" className="btn btn--texto-peligro btn--chico" onClick={() => handleEliminar(e.id_entrada)}>
-                  Eliminar
-                </button>
-              </div>
-            </li>
-          ))}
+          {entradas.map((e) => {
+            const esMia = encargado?.id_encargado === e.id_encargado;
+            return (
+              <li key={e.id_entrada} className="elemento">
+                <div className="elemento__cuerpo">
+                  {editando === e.id_entrada ? (
+                    <input
+                      className="entrada"
+                      type="text"
+                      aria-label="Editar entrada"
+                      value={textoEdicion}
+                      onChange={(ev) => setTextoEdicion(ev.target.value)}
+                    />
+                  ) : (
+                    <span className="elemento__titulo elemento__titulo--normal">{e.descripcion}</span>
+                  )}
+                  <span className="elemento__detalle">
+                    {e.nombre_encargado} · {formatHora(e.timestamp_registro)}
+                    {e.timestamp_edicion && ` · editada por ${e.nombre_editor} a las ${formatHora(e.timestamp_edicion)}`}
+                  </span>
+                </div>
+                <div className="elemento__acciones">
+                  {editando === e.id_entrada ? (
+                    <>
+                      <button type="button" className="btn btn--primario btn--chico" onClick={() => guardarEdicion(e.id_entrada)}>
+                        Guardar
+                      </button>
+                      <button type="button" className="btn btn--secundario btn--chico" onClick={() => setEditando(null)}>
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {esMia && (
+                        <button type="button" className="btn btn--secundario btn--chico" onClick={() => empezarEdicion(e)}>
+                          Editar
+                        </button>
+                      )}
+                      <button type="button" className="btn btn--texto-peligro btn--chico" onClick={() => handleEliminar(e.id_entrada)}>
+                        Eliminar
+                      </button>
+                    </>
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

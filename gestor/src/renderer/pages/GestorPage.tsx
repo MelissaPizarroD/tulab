@@ -18,8 +18,8 @@ declare global {
     electron: {
       platform: string;
       apiUrl: string;
-      setIdEquipo: (id: number) => void;
-      notificarSesionIniciada: (id: number) => void;
+      setIdEquipo: (id: number, idDispositivo: number) => void;
+      notificarSesionIniciada: (id: number, idDispositivo: number) => void;
       estadoSesion: (activa: boolean) => void;
       setTiempoInactividad: (minutos: number) => void;
       onInactividad: (callback: () => void) => () => void;
@@ -159,7 +159,7 @@ export const GestorPage = () => {
       setIdEquipo(idEq);
       setNumeroEquipo(numero);
       setIdDispositivo(idDisp);
-      window.electron?.setIdEquipo(idEq);
+      window.electron?.setIdEquipo(idEq, idDisp);
     } catch (error: any) {
       setErrorConfig(error.response?.data?.mensaje || 'Error al configurar el equipo');
     } finally {
@@ -175,7 +175,7 @@ export const GestorPage = () => {
 
     if (respuesta.exito) {
       setEstadoSesion('con_sesion');
-      window.electron?.notificarSesionIniciada(idEquipo);
+      window.electron?.notificarSesionIniciada(idEquipo, idDispositivo);
       setResultado({
         tipo: 'exito',
         titulo: '¡Sesión iniciada!',
@@ -196,9 +196,9 @@ export const GestorPage = () => {
   };
 
   const handleCerrarSesion = async (motivo: string = 'manual') => {
-    if (!idEquipo) return;
+    if (!idEquipo || !idDispositivo) return;
     setCargando(true);
-    const respuesta = await cerrarSesion(idEquipo, motivo);
+    const respuesta = await cerrarSesion(idEquipo, idDispositivo, motivo);
 
     if (respuesta.exito) {
       setEstadoSesion('sin_sesion');
@@ -328,9 +328,10 @@ export const GestorPage = () => {
         )}
       </div>
 
-      {mostrarNovedad && idEquipo && (
+      {mostrarNovedad && idEquipo && idDispositivo && (
         <NovedadModal
           id_equipo={idEquipo}
+          id_dispositivo={idDispositivo}
           onCerrar={() => setMostrarNovedad(false)}
         />
       )}

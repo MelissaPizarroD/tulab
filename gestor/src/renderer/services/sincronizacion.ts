@@ -30,6 +30,7 @@ export const sincronizarPendientes = async () => {
         tipo: 'novedad',
         hora: n.timestamp_reporte,
         id_equipo: n.id_equipo,
+        id_dispositivo: n.id_dispositivo,
         descripcion: n.descripcion
       }))
     ].sort((a, b) => a.hora.localeCompare(b.hora));

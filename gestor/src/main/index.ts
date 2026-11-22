@@ -33,6 +33,7 @@ const iconoBandeja = nativeImage.createFromPath(path.join(__dirname, '../../asse
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let idEquipoActual: number | null = null;
+let idDispositivoActual: number | null = null;
 let saliendo = false;
 let sesionActiva = false;
 
@@ -166,12 +167,14 @@ ipcMain.on('get-api-url', (event) => {
   event.returnValue = API_URL;
 });
 
-ipcMain.on('set-id-equipo', (_event, id: number) => {
+ipcMain.on('set-id-equipo', (_event, id: number, idDispositivo: number) => {
   idEquipoActual = id;
+  idDispositivoActual = idDispositivo;
 });
 
-ipcMain.on('sesion-iniciada', (_event, id: number) => {
+ipcMain.on('sesion-iniciada', (_event, id: number, idDispositivo: number) => {
   idEquipoActual = id;
+  idDispositivoActual = idDispositivo;
 });
 
 // El renderer avisa si hay sesion activa o no
@@ -200,7 +203,7 @@ const iniciarVigilanciaInactividad = () => {
 };
 
 const cerrarSesionAlApagar = () => {
-  if (!idEquipoActual) return;
+  if (!idEquipoActual || !idDispositivoActual) return;
 
   const request = net.request({
     method: 'POST',
@@ -209,6 +212,7 @@ const cerrarSesionAlApagar = () => {
   request.setHeader('Content-Type', 'application/json');
   request.write(JSON.stringify({
     id_equipo: idEquipoActual,
+    id_dispositivo: idDispositivoActual,
     motivo_cierre: 'apagado_equipo'
   }));
   request.end();

@@ -39,6 +39,21 @@ export const bitacoraService = {
 
   async obtenerPorTurno(id_turno: number) {
     return await bitacoraRepository.obtenerPorTurno(id_turno);
+  },
+
+  async editar(id_entrada: number, id_encargado: number, descripcion: string) {
+    const turno = await turnoRepository.obtenerTurnoActivo();
+    if (!turno) {
+      throw new Error('No hay turno activo');
+    }
+
+    const entrada = await bitacoraRepository.editar(id_entrada, turno.id_turno, id_encargado, descripcion);
+    if (!entrada) {
+      throw new Error('No se encontró la entrada, no es del turno activo o no la escribiste tú');
+    }
+
+    emitirEvento('bitacora_actualizada');
+    return entrada;
   }
 
 };

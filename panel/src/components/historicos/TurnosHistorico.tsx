@@ -176,7 +176,13 @@ export const TurnosHistorico = () => {
                               {[...detalle.bitacora].reverse().map((b) => (
                                 <li key={b.id_entrada}>
                                   <span className="turno__hora">{formatHora(b.timestamp_registro)}</span>
-                                  <span>{b.descripcion}<span className="turno__autor"> · {b.nombre_encargado}</span></span>
+                                  <span>
+                                    {b.descripcion}
+                                    <span className="turno__autor">
+                                      {' '}· {b.nombre_encargado}
+                                      {b.timestamp_edicion && ` · editada por ${b.nombre_editor} a las ${formatHora(b.timestamp_edicion)}`}
+                                    </span>
+                                  </span>
                                 </li>
                               ))}
                             </ul>
@@ -221,7 +227,7 @@ export const TurnosHistorico = () => {
                                   <span className="turno__hora">{formatHora(n.timestamp_reporte)}</span>
                                   <span>
                                     <span className="insignia insignia--aviso">PC {n.numero_equipo}</span> {n.descripcion}
-                                    <span className="turno__autor"> · {n.nombre_estudiante || n.codigo_estudiantil}</span>
+                                    <span className="turno__autor"> · {n.nombre_estudiante || n.nombre_visitante || n.codigo_estudiantil}</span>
                                   </span>
                                 </li>
                               ))}

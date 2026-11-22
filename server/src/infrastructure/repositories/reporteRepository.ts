@@ -21,13 +21,14 @@ export const reporteRepository = {
 
   async bitacora(desde: string, hasta: string) {
     const result = await pool.query(
-      `SELECT rb.*, e.nombre AS nombre_encargado,
+      `SELECT rb.*, e.nombre AS nombre_encargado, ee.nombre AS nombre_editor,
               to_char(t.fecha_apertura, 'YYYY-MM-DD') AS fecha_turno
-       FROM registro_bitacora rb
-       JOIN turno t ON rb.id_turno = t.id_turno
-       JOIN encargado e ON rb.id_encargado = e.id_encargado
-       WHERE rb.estado = 'activa' AND t.fecha_apertura BETWEEN $1 AND $2
-       ORDER BY rb.timestamp_registro`,
+      FROM registro_bitacora rb
+      JOIN turno t ON rb.id_turno = t.id_turno
+      JOIN encargado e ON rb.id_encargado = e.id_encargado
+      LEFT JOIN encargado ee ON rb.id_encargado_edicion = ee.id_encargado
+      WHERE rb.estado = 'activa' AND t.fecha_apertura BETWEEN $1 AND $2
+      ORDER BY rb.timestamp_registro`,
       [desde, hasta]
     );
     return result.rows;
@@ -39,15 +40,16 @@ export const reporteRepository = {
               ra.id_turno,
               to_char(t.fecha_apertura, 'YYYY-MM-DD') AS fecha_turno,
               e.nombre AS nombre_estudiante,
-              ra.codigo_estudiantil
-       FROM novedad_equipo ne
-       JOIN sesion_equipo se ON ne.id_sesion = se.id_sesion
-       JOIN registro_acceso ra ON se.id_registro = ra.id_registro
-       JOIN turno t ON ra.id_turno = t.id_turno
-       JOIN equipo eq ON ne.id_equipo = eq.id_equipo
-       LEFT JOIN estudiante e ON ra.codigo_estudiantil = e.codigo_estudiantil
-       WHERE t.fecha_apertura BETWEEN $1 AND $2
-       ORDER BY ne.timestamp_reporte`,
+              v.nombre AS nombre_visitante
+      FROM novedad_equipo ne
+      JOIN sesion_equipo se ON ne.id_sesion = se.id_sesion
+      JOIN registro_acceso ra ON se.id_registro = ra.id_registro
+      JOIN turno t ON ra.id_turno = t.id_turno
+      JOIN equipo eq ON ne.id_equipo = eq.id_equipo
+      LEFT JOIN estudiante e ON ne.codigo_estudiantil = e.codigo_estudiantil
+      LEFT JOIN visitante v ON ne.id_visitante = v.id_visitante
+      WHERE t.fecha_apertura BETWEEN $1 AND $2
+      ORDER BY ne.timestamp_reporte`,
       [desde, hasta]
     );
     return result.rows;

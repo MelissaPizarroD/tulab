@@ -3,10 +3,11 @@ import { reportarNovedad } from '../services/sesionService';
 
 type Props = {
   id_equipo: number;
+  id_dispositivo: number;
   onCerrar: () => void;
-}
+};
 
-export const NovedadModal = ({ id_equipo, onCerrar }: Props) => {
+export const NovedadModal = ({ id_equipo, id_dispositivo, onCerrar }: Props) => {
   const [descripcion, setDescripcion] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState(false);
@@ -16,8 +17,7 @@ export const NovedadModal = ({ id_equipo, onCerrar }: Props) => {
     if (!descripcion.trim() || enviando) return;
     setEnviando(true);
     setError('');
-    const resultado = await reportarNovedad(id_equipo, descripcion);
-    if (resultado.exito) {
+    const resultado = await reportarNovedad(id_equipo, id_dispositivo, descripcion);    if (resultado.exito) {
       setExito(true);
       setTimeout(onCerrar, 2000);
     } else {

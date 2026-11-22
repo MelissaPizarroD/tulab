@@ -110,7 +110,8 @@ export const exportarTurnosExcel = (
       'Turno': `#${b.id_turno}`,
       'Hora': hora(b.timestamp_registro),
       'Encargado': b.nombre_encargado,
-      'Descripción': b.descripcion
+      'Descripción': b.descripcion,
+      'Última edición': b.timestamp_edicion ? `${b.nombre_editor} (${hora(b.timestamp_edicion)})` : '-'
     }))),
     'Bitácora'
   );
@@ -124,7 +125,8 @@ export const exportarTurnosExcel = (
       'Turno': n.id_turno ? `#${n.id_turno}` : '-',
       'Hora': hora(n.timestamp_reporte),
       'PC': n.numero_equipo,
-      'Reportó': n.nombre_estudiante || n.codigo_estudiantil || '-',
+      'Reportó': n.nombre_estudiante || n.nombre_visitante || '-',
+      'Código estudiantil': n.codigo_estudiantil || '-',
       'Descripción': n.descripcion
     }))),
     'Novedades de equipos'
@@ -197,7 +199,8 @@ export const exportarResumenExcel = (datos: DatosReporte, est: Estadisticas, tit
       'Turno': `#${b.id_turno}`,
       'Hora': hora(b.timestamp_registro),
       'Encargado': b.nombre_encargado,
-      'Descripción': b.descripcion
+      'Descripción': b.descripcion,
+      'Última edición': b.timestamp_edicion ? `${b.nombre_editor} (${hora(b.timestamp_edicion)})` : '-'
     }))),
     'Bitácora'
   );
@@ -209,7 +212,8 @@ export const exportarResumenExcel = (datos: DatosReporte, est: Estadisticas, tit
       'Turno': n.id_turno ? `#${n.id_turno}` : '-',
       'Hora': hora(n.timestamp_reporte),
       'PC': n.numero_equipo,
-      'Reportó': n.nombre_estudiante || n.codigo_estudiantil || '-',
+      'Reportó': n.nombre_estudiante || n.nombre_visitante || '-',
+      'Código estudiantil': n.codigo_estudiantil || '-',
       'Descripción': n.descripcion
     }))),
     'Novedades de equipos'

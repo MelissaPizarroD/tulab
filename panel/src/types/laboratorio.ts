@@ -43,6 +43,7 @@ export interface Novedad {
   numero_equipo: number;
   nombre_estudiante: string | null;
   codigo_estudiantil: string | null;
+  nombre_visitante: string | null;
 }
 
 export type EstadoEquipo = 'disponible' | 'en_uso' | 'apagado';

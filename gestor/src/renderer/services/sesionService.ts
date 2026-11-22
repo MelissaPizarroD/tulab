@@ -26,19 +26,21 @@ export const iniciarSesion = async (codigo: string, id_equipo: number, id_dispos
       id_equipo,
       id_dispositivo,
       hora_inicio: new Date().toISOString(),
+      tipo: 'inicio',
       sincronizado: false
     });
     return { exito: true, datos: null, offline: true };
   }
 };
 
-export const cerrarSesion = async (id_equipo: number, motivo_cierre: string) => {
+export const cerrarSesion = async (id_equipo: number, id_dispositivo: number, motivo_cierre: string) => {
   const conectado = await verificarConexion();
 
   if (conectado) {
     try {
       const response = await api.post('/api/sesiones/cerrar', {
         id_equipo,
+        id_dispositivo,
         motivo_cierre
       });
       return { exito: true, datos: response.data, offline: false };
@@ -53,22 +55,24 @@ export const cerrarSesion = async (id_equipo: number, motivo_cierre: string) => 
     const db = await getDB();
     await db.add('sesiones_pendientes', {
       id_equipo,
+      id_dispositivo,
       motivo_cierre,
       hora_cierre: new Date().toISOString(),
-      tipo: 'inicio',
+      tipo: 'cierre',
       sincronizado: false
     });
     return { exito: true, datos: null, offline: true };
   }
 };
 
-export const reportarNovedad = async (id_equipo: number, descripcion: string) => {
+export const reportarNovedad = async (id_equipo: number, id_dispositivo: number, descripcion: string) => {
   const conectado = await verificarConexion();
 
   if (conectado) {
     try {
       const response = await api.post('/api/novedades', {
         id_equipo,
+        id_dispositivo,
         descripcion
       });
       return { exito: true, datos: response.data, offline: false };
@@ -83,6 +87,7 @@ export const reportarNovedad = async (id_equipo: number, descripcion: string) =>
     const db = await getDB();
     await db.add('novedades_pendientes', {
       id_equipo,
+      id_dispositivo,
       descripcion,
       timestamp_reporte: new Date().toISOString(),
       sincronizado: false

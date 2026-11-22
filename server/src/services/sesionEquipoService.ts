@@ -5,6 +5,7 @@ import { estudianteService } from './estudianteService';
 import { emitirEvento } from '../infrastructure/realtime/socketServer';
 import { visitanteService } from './visitanteService';
 import { clasificarCodigo } from '../utils/clasificarCodigo';
+import { dispositivoService } from './dispositivoService';
 
 export const sesionEquipoService = {
 
@@ -59,9 +60,12 @@ export const sesionEquipoService = {
 
   async cerrarSesion(data: {
     id_equipo: number;
+    id_dispositivo: number;
     motivo_cierre: string;
     hora_cierre?: string;
   }) {
+    await dispositivoService.validarGestor(data.id_dispositivo, data.id_equipo);
+
     const sesion = await sesionEquipoRepository.buscarActivaPorEquipo(data.id_equipo);
     if (!sesion) {
       throw new Error('No hay sesión activa en este equipo');

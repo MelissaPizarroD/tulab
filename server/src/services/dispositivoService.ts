@@ -67,6 +67,22 @@ export const dispositivoService = {
       emitirEvento('sesion_cerrada');
       emitirEvento('dispositivo_actualizado');
     }
-  }
+  },
+
+  // Confirma que el dispositivo existe, es un gestor y pertenece a ese equipo
+  async validarGestor(id_dispositivo: number, id_equipo: number) {
+    const dispositivo = Number.isInteger(Number(id_dispositivo))
+      ? await dispositivoRepository.buscarPorId(Number(id_dispositivo))
+      : null;
+
+    if (
+      !dispositivo ||
+      !dispositivo.activo ||
+      dispositivo.tipo !== 'gestor_sesiones' ||
+      dispositivo.id_equipo !== Number(id_equipo)
+    ) {
+      throw Object.assign(new Error('Dispositivo no autorizado para este equipo'), { descartar: true });
+    }
+  },
 
 };

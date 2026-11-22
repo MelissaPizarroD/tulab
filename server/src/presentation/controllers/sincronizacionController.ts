@@ -94,6 +94,7 @@ export const sincronizacionController = {
             try {
               resultado = await sesionEquipoService.cerrarSesion({
                 id_equipo: evento.id_equipo,
+                id_dispositivo: evento.id_dispositivo,
                 motivo_cierre: evento.motivo_cierre,
                 hora_cierre: evento.hora
               });
@@ -105,6 +106,7 @@ export const sincronizacionController = {
           } else if (evento.tipo === 'novedad') {
             resultado = await novedadEquipoService.reportar({
               id_equipo: evento.id_equipo,
+              id_dispositivo: evento.id_dispositivo,
               descripcion: evento.descripcion,
               timestamp_reporte: evento.hora
             });
