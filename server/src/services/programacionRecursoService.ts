@@ -3,6 +3,7 @@ import { turnoRepository } from '../infrastructure/repositories/turnoRepository'
 import { estudianteService } from './estudianteService';
 import { visitanteService } from './visitanteService';
 import { clasificarCodigo } from '../utils/clasificarCodigo';
+import { emitirEvento } from '../infrastructure/realtime/socketServer';
 
 export const programacionRecursoService = {
 
@@ -29,7 +30,7 @@ export const programacionRecursoService = {
       codigo_estudiantil = estudiante.codigo_estudiantil;
     }
 
-    return await programacionRecursoRepository.crear({
+    const programacion = await programacionRecursoRepository.crear({
       id_turno: turno.id_turno,
       codigo_estudiantil,
       id_visitante,
@@ -37,6 +38,8 @@ export const programacionRecursoService = {
       descripcion_recurso: data.descripcion_recurso,
       hora_estimada_disponibilidad: data.hora_estimada_disponibilidad
     });
+    emitirEvento('programacion_actualizada');
+    return programacion;
   },
 
   async actualizarEstado(id_programacion: number, estado: string) {
@@ -49,7 +52,8 @@ export const programacionRecursoService = {
     if (!programacion) {
       throw new Error('Programación no encontrada');
     }
-
+    
+    emitirEvento('programacion_actualizada');
     return programacion;
   },
 

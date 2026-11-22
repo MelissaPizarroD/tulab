@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, socket } from '../services/api';
 
 interface Programacion {
   id_programacion: number;
@@ -43,6 +43,10 @@ export const ProgramacionRecursos = ({ id_turno }: { id_turno: number }) => {
 
   useEffect(() => {
     cargarProgramaciones();
+    socket.on('programacion_actualizada', cargarProgramaciones);
+    return () => {
+      socket.off('programacion_actualizada', cargarProgramaciones);
+    };
   }, [id_turno]);
 
   const handleAgregar = async () => {

@@ -5,8 +5,6 @@ import { permitirRoles, verificarToken } from '../middlewares/authMiddleware';
 const router = Router();
 
 router.get('/', verificarToken, equipoController.obtenerTodos);
-router.post('/', verificarToken, equipoController.crear);
-router.patch('/:id', verificarToken, equipoController.actualizarEstado);
 router.post('/', verificarToken, permitirRoles('encargado_sala'), equipoController.crear);
 router.patch('/:id', verificarToken, permitirRoles('encargado_sala'), equipoController.actualizarEstado);
 

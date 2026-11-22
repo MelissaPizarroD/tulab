@@ -1,3 +1,4 @@
+import { emitirEvento } from '../infrastructure/realtime/socketServer';
 import { novedadEquipoRepository } from '../infrastructure/repositories/novedadEquipoRepository';
 import { sesionEquipoRepository } from '../infrastructure/repositories/sesionEquipoRepository';
 import { turnoRepository } from '../infrastructure/repositories/turnoRepository';
@@ -19,12 +20,14 @@ async reportar(data: {
     throw new Error('No hay sesión activa en este equipo');
   }
 
-  return await novedadEquipoRepository.crear({
+  const novedad = await novedadEquipoRepository.crear({
     id_sesion: sesionActiva.id_sesion,
     id_equipo: data.id_equipo,
     descripcion: data.descripcion,
     timestamp_reporte: data.timestamp_reporte
   });
+  emitirEvento('novedad_reportada', novedad);
+  return novedad;
 },
 
   async obtenerPorTurno(id_turno: number) {

@@ -4,6 +4,7 @@ import { sesionEquipoRepository } from '../infrastructure/repositories/sesionEqu
 import { bitacoraRepository } from '../infrastructure/repositories/bitacoraRepository';
 import { novedadEquipoRepository } from '../infrastructure/repositories/novedadEquipoRepository';
 import { programacionRecursoRepository } from '../infrastructure/repositories/programacionRecursoRepository';
+import { emitirEvento } from '../infrastructure/realtime/socketServer';
 
 export const turnoService = {
 
@@ -27,12 +28,14 @@ export const turnoService = {
       hour12: false
     });
 
-    return await turnoRepository.crear({
+    const turno = await turnoRepository.crear({
       id_encargado_apertura: data.id_encargado_apertura,
       fecha_apertura,
       hora_apertura,
       observaciones_apertura: data.observaciones_apertura
     });
+    emitirEvento('turno_actualizado');
+    return turno;
   },
 
   async cerrarTurno(id_turno: number, data: {
@@ -53,11 +56,13 @@ export const turnoService = {
       hour12: false
     });
 
-    return await turnoRepository.cerrar(id_turno, {
+    const turnoCerrado = await turnoRepository.cerrar(id_turno, {
       id_encargado_cierre: data.id_encargado_cierre,
       hora_cierre,
       observaciones_cierre: data.observaciones_cierre
     });
+    emitirEvento('turno_actualizado');
+    return turnoCerrado;
   },
 
   async obtenerHistorico(filtros: { desde?: string; hasta?: string }) {

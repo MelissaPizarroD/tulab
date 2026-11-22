@@ -10,7 +10,10 @@ const EVENTOS = [
   'sesion_iniciada',
   'sesion_cerrada',
   'dispositivo_actualizado',
-  'visitante_actualizado'
+  'visitante_actualizado',
+  'novedad_reportada',
+  'equipo_actualizado',
+  'turno_actualizado'
 ];
 
 /**

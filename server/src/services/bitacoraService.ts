@@ -1,3 +1,4 @@
+import { emitirEvento } from '../infrastructure/realtime/socketServer';
 import { bitacoraRepository } from '../infrastructure/repositories/bitacoraRepository';
 import { turnoRepository } from '../infrastructure/repositories/turnoRepository';
 
@@ -12,11 +13,13 @@ export const bitacoraService = {
       throw new Error('No hay turno activo');
     }
 
-    return await bitacoraRepository.crear({
+    const entrada = await bitacoraRepository.crear({
       id_turno: turno.id_turno,
       id_encargado: data.id_encargado,
       descripcion: data.descripcion
     });
+    emitirEvento('bitacora_actualizada');
+    return entrada;
   },
 
   async eliminar(id_entrada: number) {
@@ -29,7 +32,8 @@ export const bitacoraService = {
     if (!entrada) {
       throw new Error('No se encontró la entrada o no pertenece al turno activo');
     }
-
+    
+    emitirEvento('bitacora_actualizada');
     return entrada;
   },
 

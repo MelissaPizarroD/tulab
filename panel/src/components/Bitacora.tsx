@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, socket } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 interface Entrada {
@@ -27,6 +27,10 @@ export const Bitacora = ({ id_turno }: { id_turno: number }) => {
 
   useEffect(() => {
     cargarEntradas();
+    socket.on('bitacora_actualizada', cargarEntradas);
+    return () => {
+      socket.off('bitacora_actualizada', cargarEntradas);
+    };
   }, [id_turno]);
 
   const handleAgregar = async () => {
