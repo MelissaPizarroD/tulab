@@ -6,7 +6,13 @@ export const registroAccesoController = {
 
   async registrarEntrada(req: Request, res: Response) {
     try {
-      const registro = await registroAccesoService.registrarEntrada({ ...req.body, ip_origen: obtenerIp(req) });
+      const { codigo, id_dispositivo, origen_registro } = req.body;
+      const registro = await registroAccesoService.registrarEntrada({
+        codigo,
+        id_dispositivo,
+        origen_registro,
+        ip_origen: obtenerIp(req)
+      });
       res.status(201).json(registro);
     } catch (error: any) {
       res.status(400).json({ mensaje: error.message });
@@ -15,7 +21,8 @@ export const registroAccesoController = {
 
   async registrarSalida(req: Request, res: Response) {
     try {
-      const registro = await registroAccesoService.registrarSalida(req.body);
+      const { codigo } = req.body;
+      const registro = await registroAccesoService.registrarSalida({ codigo });
       res.json(registro);
     } catch (error: any) {
       res.status(400).json({ mensaje: error.message });

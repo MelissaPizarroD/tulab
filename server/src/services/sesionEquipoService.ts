@@ -16,10 +16,9 @@ export const sesionEquipoService = {
     ip_origen?: string;
     hora_inicio?: string;
   }) {
+    await dispositivoService.validarGestor(data.id_dispositivo, data.id_equipo);
+
     const turno = await turnoRepository.obtenerTurnoActivo();
-    if (!turno) {
-      throw new Error('No hay turno activo');
-    }
 
     const sesionEquipoActiva = await sesionEquipoRepository.buscarActivaPorEquipo(data.id_equipo);
     if (sesionEquipoActiva) {

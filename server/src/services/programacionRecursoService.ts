@@ -4,6 +4,7 @@ import { turnoRepository } from '../infrastructure/repositories/turnoRepository'
 import { estudianteService } from './estudianteService';
 import { visitanteService } from './visitanteService';
 import { emitirEvento } from '../infrastructure/realtime/socketServer';
+import { clasificarCodigo } from '../utils/clasificarCodigo';
 
 const TRANSICIONES: Record<string, string[]> = {
   pendiente: ['asignado', 'cancelado'],
@@ -21,6 +22,20 @@ export const programacionRecursoService = {
     hora_inicio: string;
     hora_fin: string;
   }) {
+
+    let codigo_estudiantil: string | undefined;
+    let id_visitante: number | undefined;
+
+    const { tipo, codigo } = clasificarCodigo(data.codigo);
+
+    if (tipo === 'visitante') {
+      const visitante = await visitanteService.validarCodigoTemporal(codigo);
+      id_visitante = visitante.id_visitante;
+    } else {
+      const estudiante = await estudianteService.validarCodigo(codigo);
+      codigo_estudiantil = estudiante.codigo_estudiantil;
+    }
+
     const turno = await turnoRepository.obtenerTurnoActivo();
     if (!turno) {
       throw new Error('No hay turno activo');
@@ -45,17 +60,6 @@ export const programacionRecursoService = {
       throw new Error(
         `${recurso.nombre} ya está reservado de ${String(solape.hora_estimada_disponibilidad).slice(0, 5)} a ${String(solape.hora_fin).slice(0, 5)}`
       );
-    }
-
-    let codigo_estudiantil: string | undefined;
-    let id_visitante: number | undefined;
-
-    if (data.codigo.length === 6 && !isNaN(Number(data.codigo))) {
-      const visitante = await visitanteService.validarCodigoTemporal(data.codigo);
-      id_visitante = visitante.id_visitante;
-    } else {
-      const estudiante = await estudianteService.validarCodigo(data.codigo);
-      codigo_estudiantil = estudiante.codigo_estudiantil;
     }
 
     const programacion = await programacionRecursoRepository.crear({

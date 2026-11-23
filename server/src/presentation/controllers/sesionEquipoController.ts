@@ -6,7 +6,13 @@ export const sesionEquipoController = {
 
   async iniciar(req: Request, res: Response) {
     try {
-      const sesion = await sesionEquipoService.iniciarSesion({ ...req.body, ip_origen: obtenerIp(req) });
+      const { codigo, id_equipo, id_dispositivo } = req.body;
+      const sesion = await sesionEquipoService.iniciarSesion({
+        codigo,
+        id_equipo,
+        id_dispositivo,
+        ip_origen: obtenerIp(req)
+      });
       res.status(201).json(sesion);
     } catch (error: any) {
       res.status(400).json({ mensaje: error.message });
@@ -15,7 +21,12 @@ export const sesionEquipoController = {
 
   async cerrar(req: Request, res: Response) {
     try {
-      const sesion = await sesionEquipoService.cerrarSesion(req.body);
+      const { id_equipo, id_dispositivo, motivo_cierre } = req.body;
+      const sesion = await sesionEquipoService.cerrarSesion({
+        id_equipo,
+        id_dispositivo,
+        motivo_cierre
+      });
       res.json(sesion);
     } catch (error: any) {
       res.status(400).json({ mensaje: error.message });
