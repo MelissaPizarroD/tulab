@@ -109,6 +109,20 @@ export const GestorPage = () => {
   }, []);
 
   // Inactividad: el proceso principal mide el uso de todo el sistema y avisa aquí
+
+  // Al iniciar una sesión se vuelve a leer el tiempo de inactividad,
+  // para aplicar los cambios hechos en el panel sin reiniciar el gestor
+  useEffect(() => {
+    if (estadoSesion !== 'con_sesion') return;
+    let vigente = true;
+    obtenerConfiguracion('tiempo_inactividad_minutos').then((tiempo) => {
+      if (vigente && tiempo) setTiempoInactividad(Number(tiempo));
+    });
+    return () => {
+      vigente = false;
+    };
+  }, [estadoSesion]);
+
   useEffect(() => {
     if (estadoSesion !== 'con_sesion') return;
 
