@@ -2,8 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict ndFDqLXVY1YW9SF5WUoV9jBzr6G59CxJ6jmpcxhNeqPIT8dso29akFTPer2lsjr
-
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
 
@@ -1033,6 +1031,4 @@ ALTER TABLE ONLY public.turno
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict ndFDqLXVY1YW9SF5WUoV9jBzr6G59CxJ6jmpcxhNeqPIT8dso29akFTPer2lsjr
 
