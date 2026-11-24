@@ -218,7 +218,25 @@ const cerrarSesionAlApagar = () => {
   request.end();
 };
 
+// ---------- Una sola instancia ----------
+// Si el gestor ya está abierto, la nueva copia se cierra de inmediato.
+// app.exit no dispara before-quit, así que no cierra la sesión del gestor que ya corre.
+const instanciaUnica = app.requestSingleInstanceLock();
+if (!instanciaUnica) {
+  app.exit(0);
+}
+
+// Alguien intentó abrir otra copia (por ejemplo, la tarea de vigilancia):
+// si el equipo está bloqueado se trae el gestor al frente; con sesión activa no se interrumpe al usuario.
+app.on('second-instance', () => {
+  if (!sesionActiva && mainWindow) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
 app.whenReady().then(() => {
+  if (!instanciaUnica) return;
   Menu.setApplicationMenu(null);
   createWindow();
   createTray();

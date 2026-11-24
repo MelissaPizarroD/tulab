@@ -1,7 +1,14 @@
 import { api, verificarConexion } from './api';
 import { getDB } from '../db/database';
 
+const FORMATO_CODIGO = /^(\d{6}|\d{10})$/;
+
 export const iniciarSesion = async (codigo: string, id_equipo: number, id_dispositivo: number) => {
+  // Se valida antes de todo para que, sin conexión, no se desbloquee el equipo con un código inválido
+  if (!FORMATO_CODIGO.test(codigo.trim())) {
+    return { exito: false, mensaje: 'El código no tiene un formato válido', offline: false };
+  }
+
   const conectado = await verificarConexion();
 
   if (conectado) {
