@@ -32,5 +32,14 @@ export const recursoController = {
     } catch (error: any) {
       res.status(400).json({ mensaje: error.message });
     }
+  },
+
+  async eliminar(req: Request, res: Response) {
+    try {
+      await recursoService.eliminar(Number(req.params.id));
+      res.status(204).end();
+    } catch (error: any) {
+      res.status(400).json({ mensaje: error.message });
+    }
   }
 };

@@ -27,6 +27,18 @@ export const recursoRepository = {
     return r.rows[0] || null;
   },
 
+  async tieneProgramaciones(id_recurso: number) {
+    const r = await pool.query(
+      `SELECT EXISTS (SELECT 1 FROM programacion_recurso WHERE id_recurso = $1) AS tiene`,
+      [id_recurso]
+    );
+    return r.rows[0].tiene as boolean;
+  },
+
+  async eliminar(id_recurso: number) {
+    await pool.query(`DELETE FROM recurso WHERE id_recurso = $1`, [id_recurso]);
+  },
+
   // recursos con su estado actual según las reservas del turno activo
   async disponibilidad(id_turno: number | null) {
     const r = await pool.query(

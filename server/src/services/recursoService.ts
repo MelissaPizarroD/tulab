@@ -27,6 +27,24 @@ export const recursoService = {
     return recurso;
   },
 
+  // Solo se elimina un recurso que nunca se ha programado, para no perder el historial de reservas
+  async eliminar(id_recurso: number) {
+    const recurso = await recursoRepository.obtenerPorId(id_recurso);
+    if (!recurso) throw new Error('Recurso no encontrado');
+    if (await recursoRepository.tieneProgramaciones(id_recurso)) {
+      throw new Error('No se puede eliminar un recurso con reservas registradas. Desactívalo para que no se pueda programar.');
+    }
+    try {
+      await recursoRepository.eliminar(id_recurso);
+    } catch (e: any) {
+      if (e.code === '23503') {
+        throw new Error('No se puede eliminar un recurso con reservas registradas. Desactívalo para que no se pueda programar.');
+      }
+      throw e;
+    }
+    emitirEvento('recurso_actualizado');
+  },
+
   async disponibilidad() {
     const turno = await turnoRepository.obtenerTurnoActivo();
     return await recursoRepository.disponibilidad(turno ? turno.id_turno : null);

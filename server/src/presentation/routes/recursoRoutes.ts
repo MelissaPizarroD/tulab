@@ -8,5 +8,6 @@ router.get('/', verificarToken, recursoController.obtenerTodos);
 router.get('/disponibilidad', verificarToken, recursoController.disponibilidad);
 router.post('/', verificarToken, permitirRoles('encargado_sala'), recursoController.crear);
 router.patch('/:id', verificarToken, permitirRoles('encargado_sala'), recursoController.actualizarActivo);
+router.delete('/:id', verificarToken, permitirRoles('encargado_sala'), recursoController.eliminar);
 
 export default router;

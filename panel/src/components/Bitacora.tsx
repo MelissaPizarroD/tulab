@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, socket } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { ModalConfirmacion } from './ModalConfirmacion';
 
 interface Entrada {
   id_entrada: number;
@@ -20,6 +21,7 @@ export const Bitacora = ({ id_turno }: { id_turno: number }) => {
   const [editando, setEditando] = useState<number | null>(null);
   const [textoEdicion, setTextoEdicion] = useState('');
   const [error, setError] = useState('');
+  const [porEliminar, setPorEliminar] = useState<Entrada | null>(null);
   const { encargado } = useAuth();
 
   const cargarEntradas = async () => {
@@ -53,13 +55,10 @@ export const Bitacora = ({ id_turno }: { id_turno: number }) => {
     }
   };
 
+  // Los errores los muestra la ventana de confirmación
   const handleEliminar = async (id: number) => {
-    try {
-      await api.delete(`/api/bitacora/${id}`);
-      await cargarEntradas();
-    } catch (error) {
-      console.error('Error eliminando entrada:', error);
-    }
+    await api.delete(`/api/bitacora/${id}`);
+    await cargarEntradas();
   };
 
   const empezarEdicion = (e: Entrada) => {
@@ -154,7 +153,7 @@ export const Bitacora = ({ id_turno }: { id_turno: number }) => {
                           Editar
                         </button>
                       )}
-                      <button type="button" className="btn btn--texto-peligro btn--chico" onClick={() => handleEliminar(e.id_entrada)}>
+                      <button type="button" className="btn btn--texto-peligro btn--chico" onClick={() => setPorEliminar(e)}>
                         Eliminar
                       </button>
                     </>
@@ -164,6 +163,16 @@ export const Bitacora = ({ id_turno }: { id_turno: number }) => {
             );
           })}
         </ul>
+      )}
+
+      {porEliminar && (
+        <ModalConfirmacion
+          titulo="Eliminar entrada"
+          texto={<>¿Seguro que quieres eliminar la entrada <strong>"{porEliminar.descripcion}"</strong>? Esta acción no se puede deshacer.</>}
+          textoConfirmar="Eliminar"
+          onConfirmar={() => handleEliminar(porEliminar.id_entrada)}
+          onCerrar={() => setPorEliminar(null)}
+        />
       )}
     </section>
   );

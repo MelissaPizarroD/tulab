@@ -46,7 +46,7 @@ export const ResultadoRegistro = ({ tipo, mensaje, onCerrar }: Props) => {
 
       {!esExito && (
         <p className="terminal__ayuda">
-          Si el problema continúa, contacta al administrador.
+          Si el problema continúa, contacta al encargado de sala.
         </p>
       )}
     </>

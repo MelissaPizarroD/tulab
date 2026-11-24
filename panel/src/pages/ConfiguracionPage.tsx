@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
+import { ModalConfirmacion } from '../components/ModalConfirmacion';
 
 interface Configuracion {
   id_configuracion: number;
@@ -62,6 +63,7 @@ export const ConfiguracionPage = () => {
   const [nuevoRecurso, setNuevoRecurso] = useState('');
   const [agregandoRecurso, setAgregandoRecurso] = useState(false);
   const [errorRecurso, setErrorRecurso] = useState('');
+  const [recursoPorEliminar, setRecursoPorEliminar] = useState<Recurso | null>(null);
 
   const cargarConfiguraciones = async () => {
     try {
@@ -159,6 +161,12 @@ export const ConfiguracionPage = () => {
     } finally {
       setAgregandoRecurso(false);
     }
+  };
+
+  // Los errores (por ejemplo, un recurso con reservas) los muestra la ventana de confirmación
+  const handleEliminarRecurso = async (id: number) => {
+    await api.delete(`/api/recursos/${id}`);
+    await cargarRecursos();
   };
 
   const handleActivoRecurso = async (id: number, activo: boolean) => {
@@ -402,6 +410,13 @@ export const ConfiguracionPage = () => {
                         >
                           {r.activo ? 'Desactivar' : 'Activar'}
                         </button>
+                        <button
+                          type="button"
+                          className="btn btn--texto-peligro btn--chico"
+                          onClick={() => setRecursoPorEliminar(r)}
+                        >
+                          Eliminar
+                        </button>
                       </div>
                     </li>
                   ))}
@@ -411,6 +426,16 @@ export const ConfiguracionPage = () => {
           </div>
         )}
       </div>
+
+      {recursoPorEliminar && (
+        <ModalConfirmacion
+          titulo="Eliminar recurso"
+          texto={<>¿Seguro que quieres eliminar <strong>{recursoPorEliminar.nombre}</strong>? Solo se pueden eliminar los recursos que nunca se han programado. Esta acción no se puede deshacer.</>}
+          textoConfirmar="Eliminar"
+          onConfirmar={() => handleEliminarRecurso(recursoPorEliminar.id_recurso)}
+          onCerrar={() => setRecursoPorEliminar(null)}
+        />
+      )}
     </Layout>
   );
 };
